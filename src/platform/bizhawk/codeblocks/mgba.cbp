@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="mgba" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Debug">
+				<Option output="bin/Debug/mgba" imp_lib="$(TARGET_OUTPUT_DIR)$(TARGET_OUTPUT_BASENAME).a" def_file="$(TARGET_OUTPUT_DIR)$(TARGET_OUTPUT_BASENAME).def" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Debug/" />
+				<Option type="3" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-g" />
+				</Compiler>
+			</Target>
+			<Target title="Release">
+				<Option output="bin/Release/mgba" imp_lib="$(TARGET_OUTPUT_DIR)$(TARGET_OUTPUT_BASENAME).a" def_file="$(TARGET_OUTPUT_DIR)$(TARGET_OUTPUT_BASENAME).def" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="3" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-march=core2" />
+			<Add option="-Wall" />
+			<Add option="-std=gnu99" />
+			<Add option="-DRESAMPLE_LIBRARY=RESAMPLE_BLIP_BUF" />
+			<Add option="-DDISABLE_THREADING" />
+			<Add directory="../../../../src" />
+			<Add directory="../../../arm" />
+		</Compiler>
+		<Unit filename="../../../arm/arm.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../../arm/arm.h" />
+		<Unit filename="../../../arm/decoder-arm.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../../arm/decoder-inlines.h" />
+		<Unit filename="../../../arm/decoder-thumb.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../../arm/decoder.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../../arm/decoder.h" />
+		<Unit filename="../../../arm/emitter-arm.h" />
+		<Unit filename="../../../arm/emitter-inlines.h" />
+		<Unit filename="../../../arm/emitter-thumb.h" />
+		<Unit filename="../../../arm/isa-arm.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../../arm/isa-arm.h" />
+		<Unit filename="../../../arm/isa-inlines.h" />
+		<Unit filename="../../../arm/isa-thumb.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../../arm/isa-thumb.h" />
+		<Unit filename="../../../arm/macros.h" />
+		<Unit filename="../../../gba/audio.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../../gba/audio.h" />
+		<Unit filename="../../../gba/bios.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../../gba/bios.h" />
+		<Unit filename="../../../gba/cheats.h" />
+		<Unit filename="../../../gba/gba.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../../gba/gba.h" />
+		<Unit filename="../../../gba/hardware.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../../gba/hardware.h" />
+		<Unit filename="../../../gba/hle-bios.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../../gba/hle-bios.h" />
+		<Unit filename="../../../gba/input.h" />
+		<Unit filename="../../../gba/io.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../../gba/io.h" />
+		<Unit filename="../../../gba/memory.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../../gba/memory.h" />
+		<Unit filename="../../../gba/renderers/video-software.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../../gba/renderers/video-software.h" />
+		<Unit filename="../../../gba/savedata.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../../gba/savedata.h" />
+		<Unit filename="../../../gba/serialize.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../../gba/serialize.h" />
+		<Unit filename="../../../gba/sharkport.h" />
+		<Unit filename="../../../gba/sio.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../../gba/sio.h" />
+		<Unit filename="../../../gba/sio/lockstep.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../../gba/sio/lockstep.h" />
+		<Unit filename="../../../gba/supervisor/thread.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../../gba/supervisor/thread.h" />
+		<Unit filename="../../../gba/video.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../../gba/video.h" />
+		<Unit filename="../../../third-party/blip_buf/blip_buf.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../../third-party/blip_buf/blip_buf.h" />
+		<Unit filename="../../../util/arm-algo.h" />
+		<Unit filename="../../../util/circle-buffer.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../../util/circle-buffer.h" />
+		<Unit filename="../../../util/common.h" />
+		<Unit filename="../../../util/configuration.h" />
+		<Unit filename="../../../util/crc32.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../../util/crc32.h" />
+		<Unit filename="../../../util/formatting.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../../util/formatting.h" />
+		<Unit filename="../../../util/hash.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../../util/hash.h" />
+		<Unit filename="../../../util/memory.h" />
+		<Unit filename="../../../util/patch-ips.h" />
+		<Unit filename="../../../util/patch-ups.h" />
+		<Unit filename="../../../util/patch.h" />
+		<Unit filename="../../../util/png-io.h" />
+		<Unit filename="../../../util/socket.h" />
+		<Unit filename="../../../util/string.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../../util/string.h" />
+		<Unit filename="../../../util/table.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../../util/table.h" />
+		<Unit filename="../../../util/threading.h" />
+		<Unit filename="../../../util/vector.h" />
+		<Unit filename="../../../util/version.h" />
+		<Unit filename="../../../util/vfs.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../../util/vfs.h" />
+		<Unit filename="../../../util/vfs/vfs-mem.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../windows/memory.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../bizinterface.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Extensions>
+			<code_completion />
+			<envvars />
+			<debugger />
+			<lib_finder disable_auto="1" />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

@@ -25,6 +25,7 @@
 
 static const float _defaultFPSTarget = 60.f;
 
+#ifndef DISABLE_THREADING
 #ifdef USE_PTHREADS
 static pthread_key_t _contextKey;
 static pthread_once_t _contextOnce = PTHREAD_ONCE_INIT;
@@ -43,6 +44,7 @@ static BOOL CALLBACK _createTLS(PINIT_ONCE once, PVOID param, PVOID* context) {
 	_contextKey = TlsAlloc();
 	return TRUE;
 }
+#endif
 #endif
 
 #ifndef DISABLE_THREADING
