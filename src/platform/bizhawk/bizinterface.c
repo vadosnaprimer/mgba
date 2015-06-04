@@ -59,7 +59,7 @@ EXP bizctx* BizCreate(void)
         ctx->renderer.outputBufferStride = VIDEO_HORIZONTAL_PIXELS;
         GBAVideoAssociateRenderer(&ctx->gba.video, &ctx->renderer.d);
 
-        GBAAudioResizeBuffer(&ctx->gba.audio, 2048);
+        GBAAudioResizeBuffer(&ctx->gba.audio, 1024);
         blip_set_rates(ctx->gba.audio.left, GBA_ARM7TDMI_FREQUENCY, 44100);
         blip_set_rates(ctx->gba.audio.right, GBA_ARM7TDMI_FREQUENCY, 44100);
     }
@@ -96,13 +96,53 @@ EXP int BizLoad(bizctx* ctx, const void* data, int length)
     return 1;
 }
 
-EXP void BizAdvance(bizctx* ctx, int keys, color_t **vbuff)
+static void blit(void* dst_, const void* src_)
+{
+    // swap R&B, set top byte
+    const uint8_t* src = (const uint8_t*)src_;
+    uint8_t* dst = (uint8_t*)dst_;
+
+    uint8_t* dst_end = dst + VIDEO_HORIZONTAL_PIXELS * VIDEO_VERTICAL_PIXELS * BYTES_PER_PIXEL;
+
+    while(dst < dst_end)
+    {
+        dst[2] = src[0] | src[0] >> 5;
+        dst[1] = src[1] | src[1] >> 5;
+        dst[0] = src[2] | src[2] >> 5;
+        dst[3] = 0xff;
+        dst += 4;
+        src += 4;
+        dst[2] = src[0] | src[0] >> 5;
+        dst[1] = src[1] | src[1] >> 5;
+        dst[0] = src[2] | src[2] >> 5;
+        dst[3] = 0xff;
+        dst += 4;
+        src += 4;
+        dst[2] = src[0] | src[0] >> 5;
+        dst[1] = src[1] | src[1] >> 5;
+        dst[0] = src[2] | src[2] >> 5;
+        dst[3] = 0xff;
+        dst += 4;
+        src += 4;
+        dst[2] = src[0] | src[0] >> 5;
+        dst[1] = src[1] | src[1] >> 5;
+        dst[0] = src[2] | src[2] >> 5;
+        dst[3] = 0xff;
+        dst += 4;
+        src += 4;
+    }
+}
+
+EXP void BizAdvance(bizctx* ctx, int keys, color_t* vbuff, int* nsamp, short* sbuff)
 {
     ctx->gba.keySource = &keys;
-    *vbuff = ctx->vbuff;
     int frameCount = ctx->gba.video.frameCounter;
     while (frameCount == ctx->gba.video.frameCounter)
     {
         ARMRunLoop(&ctx->cpu);
     }
+    blit(vbuff, ctx->vbuff);
+    *nsamp = blip_samples_avail(ctx->gba.audio.left);
+    blip_read_samples(ctx->gba.audio.left, sbuff, 1024, TRUE);
+    blip_read_samples(ctx->gba.audio.right, sbuff + 1, 1024, TRUE);
 }
