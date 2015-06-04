@@ -143,6 +143,8 @@ EXP void BizAdvance(bizctx* ctx, int keys, color_t* vbuff, int* nsamp, short* sb
     }
     blit(vbuff, ctx->vbuff);
     *nsamp = blip_samples_avail(ctx->gba.audio.left);
+    if (*nsamp > 1024)
+        *nsamp = 1024;
     blip_read_samples(ctx->gba.audio.left, sbuff, 1024, TRUE);
     blip_read_samples(ctx->gba.audio.right, sbuff + 1, 1024, TRUE);
 }
