@@ -172,3 +172,27 @@ EXP void BizAdvance(bizctx* ctx, int keys, color_t* vbuff, int* nsamp, short* sb
     blip_read_samples(ctx->gba.audio.left, sbuff, 1024, TRUE);
     blip_read_samples(ctx->gba.audio.right, sbuff + 1, 1024, TRUE);
 }
+
+struct MemoryAreas
+{
+    const void* bios;
+    const void* wram;
+    const void* iwram;
+    const void* mmio;
+    const void* palram;
+    const void* vram;
+    const void* oam;
+    const void* rom;
+};
+
+EXP void BizGetMemoryAreas(bizctx* ctx, struct MemoryAreas* dst)
+{
+    dst->bios = ctx->gba.memory.bios;
+    dst->wram = ctx->gba.memory.wram;
+    dst->iwram = ctx->gba.memory.iwram;
+    dst->mmio = ctx->gba.memory.io;
+    dst->palram = ctx->gba.video.palette;
+    dst->vram = ctx->gba.video.renderer->vram;
+    dst->oam = ctx->gba.video.oam.raw;
+    dst->rom = ctx->gba.memory.rom;
+}
