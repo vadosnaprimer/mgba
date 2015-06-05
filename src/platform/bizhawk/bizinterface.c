@@ -20,7 +20,9 @@ typedef struct
     struct GBAAVStream stream;
     color_t vbuff[VIDEO_HORIZONTAL_PIXELS * VIDEO_VERTICAL_PIXELS];
     void* rom;
-    struct VFile* romfile;
+    struct VFile* romvf;
+    char bios[16384];
+    struct VFile* biosvf;
 } bizctx;
 
 static void logdebug(struct GBAThread* thread, enum GBALogLevel level, const char* format, va_list args)
@@ -30,8 +32,8 @@ static void logdebug(struct GBAThread* thread, enum GBALogLevel level, const cha
 
 EXP void BizDestroy(bizctx* ctx)
 {
-    ctx->romfile->close(ctx->romfile);
-    ctx->romfile = NULL;
+    ctx->romvf->close(ctx->romvf);
+    ctx->romvf = NULL;
     free(ctx->rom);
     ctx->rom = NULL;
 
@@ -40,7 +42,7 @@ EXP void BizDestroy(bizctx* ctx)
     free(ctx);
 }
 
-EXP bizctx* BizCreate(void)
+EXP bizctx* BizCreate(const void* bios)
 {
     bizctx* ctx = calloc(1, sizeof(*ctx));
     if (ctx)
@@ -62,6 +64,20 @@ EXP bizctx* BizCreate(void)
         GBAAudioResizeBuffer(&ctx->gba.audio, 1024);
         blip_set_rates(ctx->gba.audio.left, GBA_ARM7TDMI_FREQUENCY, 44100);
         blip_set_rates(ctx->gba.audio.right, GBA_ARM7TDMI_FREQUENCY, 44100);
+
+        if (bios)
+        {
+            memcpy(ctx->bios, bios, 16384);
+            ctx->biosvf = VFileFromMemory(ctx->bios, 16384);
+            if (!GBAIsBIOS(ctx->biosvf))
+            {
+                ctx->biosvf->close(ctx->biosvf);
+                GBADestroy(&ctx->gba);
+                free(ctx);
+                return NULL;
+            }
+            GBALoadBIOS(&ctx->gba, ctx->biosvf);
+        }
     }
     return ctx;
 }
@@ -78,20 +94,28 @@ EXP int BizLoad(bizctx* ctx, const void* data, int length)
         return 0;
 
     memcpy(ctx->rom, data, length);
-    ctx->romfile = VFileFromMemory(ctx->rom, length);
+    ctx->romvf = VFileFromMemory(ctx->rom, length);
 
-    if (!GBAIsROM(ctx->romfile))
+    if (!GBAIsROM(ctx->romvf))
     {
-        ctx->romfile->close(ctx->romfile);
-        ctx->romfile = NULL;
+        ctx->romvf->close(ctx->romvf);
+        ctx->romvf = NULL;
         free(ctx->rom);
         ctx->rom = NULL;
         return 0;
     }
 
     // TODO: savedata
-    GBALoadROM(&ctx->gba, ctx->romfile, NULL, NULL);
-    // TODO: what is GBAOverrideApply
+    GBALoadROM(&ctx->gba, ctx->romvf, NULL, NULL);
+
+    struct GBACartridgeOverride override;
+	const struct GBACartridge* cart = (const struct GBACartridge*) ctx->gba.memory.rom;
+	memcpy(override.id, &cart->id, sizeof(override.id));
+	if (GBAOverrideFind(NULL, &override))
+    {
+		GBAOverrideApply(&ctx->gba, &override);
+	}
+
     BizReset(ctx);
     return 1;
 }
@@ -104,7 +128,7 @@ static void blit(void* dst_, const void* src_)
 
     uint8_t* dst_end = dst + VIDEO_HORIZONTAL_PIXELS * VIDEO_VERTICAL_PIXELS * BYTES_PER_PIXEL;
 
-    while(dst < dst_end)
+    while (dst < dst_end)
     {
         dst[2] = src[0] | src[0] >> 5;
         dst[1] = src[1] | src[1] >> 5;

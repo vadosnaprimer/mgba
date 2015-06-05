@@ -173,7 +173,7 @@ bool GBAOverrideFind(const struct Configuration* config, struct GBACartridgeOver
 		}
 	}
 
-	if (config) {
+	/*if (config) {
 		char sectionName[16];
 		snprintf(sectionName, sizeof(sectionName), "override.%c%c%c%c", override->id[0], override->id[1], override->id[2], override->id[3]);
 		const char* savetype = ConfigurationGetValue(config, sectionName, "savetype");
@@ -216,11 +216,11 @@ bool GBAOverrideFind(const struct Configuration* config, struct GBACartridgeOver
 				found = true;
 			}
 		}
-	}
+	}*/
 	return found;
 }
 
-void GBAOverrideSave(struct Configuration* config, const struct GBACartridgeOverride* override) {
+/*void GBAOverrideSave(struct Configuration* config, const struct GBACartridgeOverride* override) {
 	char sectionName[16];
 	snprintf(sectionName, sizeof(sectionName), "override.%c%c%c%c", override->id[0], override->id[1], override->id[2], override->id[3]);
 	const char* savetype = 0;
@@ -256,7 +256,7 @@ void GBAOverrideSave(struct Configuration* config, const struct GBACartridgeOver
 	} else {
 		ConfigurationClearValue(config, sectionName, "idleLoop");
 	}
-}
+}*/
 
 void GBAOverrideApply(struct GBA* gba, const struct GBACartridgeOverride* override) {
 	if (override->savetype != SAVEDATA_AUTODETECT) {
