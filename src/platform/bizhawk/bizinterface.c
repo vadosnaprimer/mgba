@@ -232,3 +232,18 @@ EXP void BizPutSaveRam(bizctx* ctx, const void* data)
 {
     memcpy(ctx->savedata, data, BizGetSaveRamSize(ctx));
 }
+
+EXP int BizGetStateSize()
+{
+    return sizeof(struct GBASerializedState);
+}
+
+EXP void BizGetState(bizctx* ctx, void* data)
+{
+    GBASerialize(&ctx->gba, data);
+}
+
+EXP void BizPutState(bizctx* ctx, const void* data)
+{
+    GBADeserialize(&ctx->gba, data);
+}
