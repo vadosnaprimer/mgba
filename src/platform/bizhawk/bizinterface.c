@@ -9,6 +9,17 @@
 
 #define EXP __declspec(dllexport)
 
+/**
+ * container_of - cast a member of a structure out to the containing structure
+ * @ptr:        the pointer to the member.
+ * @type:       the type of the container struct this is embedded in.
+ * @member:     the name of the member within the struct.
+ *
+ */
+#define container_of(ptr, type, member) ({                      \
+        const typeof( ((type *)0)->member ) *__mptr = (ptr);    \
+        (type *)( (char *)__mptr - offsetof(type,member) );})
+
 void ARMDebuggerEnter(struct ARMDebugger* u1, enum DebuggerEntryReason u2, struct DebuggerEntryInfo* u3) { }
 struct VFile* VFileOpen(const char* path, int flags) { return NULL; }
 
@@ -25,7 +36,37 @@ typedef struct
     struct VFile* biosvf;
     char savedata[SIZE_CART_FLASH1M];
     struct VFile* sramvf;
+    struct GBARotationSource rotsource;
+    struct GBARTCSource rtcsource;
+    struct GBALuminanceSource lumasource;
+    int16_t tiltx;
+    int16_t tilty;
+    int16_t tiltz;
+    int64_t time;
+    uint8_t light;
 } bizctx;
+
+static int32_t GetX(struct GBARotationSource* rotationSource)
+{
+    return container_of(rotationSource, bizctx, rotsource)->tiltx << 16;
+}
+static int32_t GetY(struct GBARotationSource* rotationSource)
+{
+    return container_of(rotationSource, bizctx, rotsource)->tilty << 16;
+}
+static int32_t GetZ(struct GBARotationSource* rotationSource)
+{
+    return container_of(rotationSource, bizctx, rotsource)->tiltz << 16;
+}
+static uint8_t GetLight(struct GBALuminanceSource* luminanceSource)
+{
+    return container_of(luminanceSource, bizctx, lumasource)->light;
+}
+static time_t GetTime(struct GBARTCSource* rtcSource)
+{
+    return container_of(rtcSource, bizctx, rtcsource)->time;
+}
+static void Dummy(const void* unused) { }
 
 static void logdebug(struct GBAThread* thread, enum GBALogLevel level, const char* format, va_list args)
 {
@@ -61,6 +102,10 @@ EXP bizctx* BizCreate(const void* bios)
         ctx->gba.logHandler = logdebug;
         // ctx->gba.stream = &ctx->stream;
         ctx->gba.idleOptimization = IDLE_LOOP_IGNORE;
+        ctx->gba.realisticTiming = TRUE;
+        ctx->gba.rtcSource = &ctx->rtcsource;
+        ctx->gba.luminanceSource = &ctx->lumasource;
+        ctx->gba.rotationSource = &ctx->rotsource;
 
         GBAVideoSoftwareRendererCreate(&ctx->renderer);
         ctx->renderer.outputBuffer = ctx->vbuff;
@@ -84,6 +129,15 @@ EXP bizctx* BizCreate(const void* bios)
             }
             GBALoadBIOS(&ctx->gba, ctx->biosvf);
         }
+
+        ctx->rotsource.sample = Dummy;
+        ctx->rotsource.readTiltX = GetX;
+        ctx->rotsource.readTiltY = GetY;
+        ctx->rotsource.readGyroZ = GetZ;
+        ctx->lumasource.sample = Dummy;
+        ctx->lumasource.readLuminance = GetLight;
+        ctx->rtcsource.sample = Dummy;
+        ctx->rtcsource.unixTime = GetTime;
     }
     return ctx;
 }
@@ -164,9 +218,15 @@ static void blit(void* dst_, const void* src_)
     }
 }
 
-EXP void BizAdvance(bizctx* ctx, int keys, color_t* vbuff, int* nsamp, short* sbuff)
+EXP void BizAdvance(bizctx* ctx, int keys, color_t* vbuff, int* nsamp, int16_t* sbuff,
+    int64_t time, int16_t gyrox, int16_t gyroy, int16_t gyroz, uint8_t luma)
 {
     ctx->gba.keySource = &keys;
+    ctx->light = luma;
+    ctx->time = time;
+    ctx->tiltx = gyrox;
+    ctx->tilty = gyroy;
+    ctx->tiltz = gyroz;
     int frameCount = ctx->gba.video.frameCounter;
     while (frameCount == ctx->gba.video.frameCounter)
     {
