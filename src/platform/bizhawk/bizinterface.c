@@ -23,6 +23,8 @@ typedef struct
     struct VFile* romvf;
     char bios[16384];
     struct VFile* biosvf;
+    char savedata[SIZE_CART_FLASH1M];
+    struct VFile* sramvf;
 } bizctx;
 
 static void logdebug(struct GBAThread* thread, enum GBALogLevel level, const char* format, va_list args)
@@ -36,6 +38,9 @@ EXP void BizDestroy(bizctx* ctx)
     ctx->romvf = NULL;
     free(ctx->rom);
     ctx->rom = NULL;
+    if (ctx->biosvf != NULL)
+        ctx->biosvf->close(ctx->biosvf);
+    ctx->sramvf->close(ctx->sramvf);
 
     // TODO: this seems short.  is there anything else that needs to happen here?
     GBADestroy(&ctx->gba);
@@ -45,6 +50,7 @@ EXP void BizDestroy(bizctx* ctx)
 EXP bizctx* BizCreate(const void* bios)
 {
     bizctx* ctx = calloc(1, sizeof(*ctx));
+    memset(ctx->savedata, 0xff, sizeof(ctx->savedata));
     if (ctx)
     {
         GBACreate(&ctx->gba);
@@ -105,8 +111,9 @@ EXP int BizLoad(bizctx* ctx, const void* data, int length)
         return 0;
     }
 
-    // TODO: savedata
-    GBALoadROM(&ctx->gba, ctx->romvf, NULL, NULL);
+    ctx->sramvf = VFileFromMemory(ctx->savedata, sizeof(ctx->savedata));
+
+    GBALoadROM(&ctx->gba, ctx->romvf, ctx->sramvf, NULL);
 
     struct GBACartridgeOverride override;
 	const struct GBACartridge* cart = (const struct GBACartridge*) ctx->gba.memory.rom;
@@ -122,7 +129,7 @@ EXP int BizLoad(bizctx* ctx, const void* data, int length)
 
 static void blit(void* dst_, const void* src_)
 {
-    // swap R&B, set top byte
+    // swap R&B, set top (alpha) byte
     const uint8_t* src = (const uint8_t*)src_;
     uint8_t* dst = (uint8_t*)dst_;
 
@@ -195,4 +202,33 @@ EXP void BizGetMemoryAreas(bizctx* ctx, struct MemoryAreas* dst)
     dst->vram = ctx->gba.video.renderer->vram;
     dst->oam = ctx->gba.video.oam.raw;
     dst->rom = ctx->gba.memory.rom;
+}
+
+EXP int BizGetSaveRamSize(bizctx* ctx)
+{
+    switch (ctx->gba.memory.savedata.type)
+    {
+	case SAVEDATA_AUTODETECT:
+	case SAVEDATA_FLASH1M:
+		return SIZE_CART_FLASH1M;
+	case SAVEDATA_FLASH512:
+		return SIZE_CART_FLASH512;
+	case SAVEDATA_EEPROM:
+		return SIZE_CART_EEPROM;
+	case SAVEDATA_SRAM:
+		return SIZE_CART_SRAM;
+	case SAVEDATA_FORCE_NONE:
+    default:
+		return 0;
+	}
+}
+
+EXP void BizGetSaveRam(bizctx* ctx, void* data)
+{
+    memcpy(data, ctx->savedata, BizGetSaveRamSize(ctx));
+}
+
+EXP void BizPutSaveRam(bizctx* ctx, const void* data)
+{
+    memcpy(ctx->savedata, data, BizGetSaveRamSize(ctx));
 }
