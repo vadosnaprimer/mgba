@@ -1,0 +1,366 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="platform">
+      <UniqueIdentifier>{b431dd04-6469-4804-b70c-cd8cb054b349}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="platform\bizhawk">
+      <UniqueIdentifier>{fc47fb99-11b4-4b12-a354-5997188a9bd7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="arm">
+      <UniqueIdentifier>{c83d8070-1af6-47b4-8338-73b4aa594498}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="gba">
+      <UniqueIdentifier>{ed915951-ff27-41f7-a522-23caf0b6f9a6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="gba\renderers">
+      <UniqueIdentifier>{17deeb58-5fd2-495e-b282-12b301a8e287}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="gba\rr">
+      <UniqueIdentifier>{1b8e5a1f-6d11-4e4e-9c28-59cfe1e7c41b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="gba\supervisor">
+      <UniqueIdentifier>{cd5337e3-668f-4ec3-8e42-3165a16c226c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="util">
+      <UniqueIdentifier>{0ded24a8-cd34-4599-bbba-be979d35e5fb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="util\vfs">
+      <UniqueIdentifier>{03af114f-6330-4de0-9f68-3281d2a0147a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="third-party">
+      <UniqueIdentifier>{5c4b4058-da15-468d-8aa5-ae06883c7b8a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="third-party\blip_buf">
+      <UniqueIdentifier>{5f77801d-8ba1-4105-8db0-e996fa2e64b9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="platform\windows">
+      <UniqueIdentifier>{bbb1addc-6f1f-422e-b627-5917b2bc49b6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="gba\cheats">
+      <UniqueIdentifier>{660830b8-b8f4-4527-b9a0-f8abfb6e89e9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="debugger">
+      <UniqueIdentifier>{8460fea3-3579-4907-9d40-c56dd351b22e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="third-party\inih">
+      <UniqueIdentifier>{aabe3ee7-2fd9-4f58-bd73-6932060a5039}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="platform\bizhawk\vs2015">
+      <UniqueIdentifier>{e0179834-ef65-48c9-8ff6-64e2e128ca35}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="platform\bizhawk\vs2015\precompile">
+      <UniqueIdentifier>{b9ec405f-368d-4af4-a1bf-0b4201eb7188}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\bizinterface.c">
+      <Filter>platform\bizhawk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\arm\decoder-thumb.c">
+      <Filter>arm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\arm\isa-arm.c">
+      <Filter>arm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\arm\isa-thumb.c">
+      <Filter>arm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\arm\arm.c">
+      <Filter>arm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\arm\decoder.c">
+      <Filter>arm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\arm\decoder-arm.c">
+      <Filter>arm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\gba\hle-bios.c">
+      <Filter>gba</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\gba\input.c">
+      <Filter>gba</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\gba\io.c">
+      <Filter>gba</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\gba\memory.c">
+      <Filter>gba</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\gba\savedata.c">
+      <Filter>gba</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\gba\serialize.c">
+      <Filter>gba</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\gba\sharkport.c">
+      <Filter>gba</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\gba\sio.c">
+      <Filter>gba</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\gba\video.c">
+      <Filter>gba</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\gba\audio.c">
+      <Filter>gba</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\gba\bios.c">
+      <Filter>gba</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\gba\cheats.c">
+      <Filter>gba</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\gba\gba.c">
+      <Filter>gba</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\gba\hardware.c">
+      <Filter>gba</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\gba\renderers\video-software.c">
+      <Filter>gba\renderers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\gba\rr\vbm.c">
+      <Filter>gba\rr</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\gba\rr\mgm.c">
+      <Filter>gba\rr</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\gba\supervisor\thread.c">
+      <Filter>gba\supervisor</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\util\vfs.c">
+      <Filter>util</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\util\circle-buffer.c">
+      <Filter>util</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\util\configuration.c">
+      <Filter>util</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\util\crc32.c">
+      <Filter>util</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\util\formatting.c">
+      <Filter>util</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\util\hash.c">
+      <Filter>util</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\util\patch.c">
+      <Filter>util</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\util\patch-ips.c">
+      <Filter>util</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\util\patch-ups.c">
+      <Filter>util</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\util\png-io.c">
+      <Filter>util</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\util\string.c">
+      <Filter>util</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\util\table.c">
+      <Filter>util</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\util\vfs\vfs-mem.c">
+      <Filter>util\vfs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\third-party\blip_buf\blip_buf.c">
+      <Filter>third-party\blip_buf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\windows\memory.c">
+      <Filter>platform\windows</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\gba\cheats\codebreaker.c">
+      <Filter>gba\cheats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\gba\cheats\gameshark.c">
+      <Filter>gba\cheats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\gba\cheats\parv3.c">
+      <Filter>gba\cheats</Filter>
+    </ClCompile>
+    <ClCompile Include="version.c">
+      <Filter>platform\bizhawk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\debugger\parser.c">
+      <Filter>debugger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\gba\supervisor\overrides.c">
+      <Filter>gba\supervisor</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\third-party\inih\ini.c">
+      <Filter>third-party\inih</Filter>
+    </ClCompile>
+    <ClCompile Include="precompile\isa-thumb.i.c">
+      <Filter>platform\bizhawk\vs2015\precompile</Filter>
+    </ClCompile>
+    <ClCompile Include="precompile\decoder-thumb.i.c">
+      <Filter>platform\bizhawk\vs2015\precompile</Filter>
+    </ClCompile>
+    <ClCompile Include="precompile\isa-arm.i.c">
+      <Filter>platform\bizhawk\vs2015\precompile</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\arm\emitter-arm.h">
+      <Filter>arm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\arm\emitter-inlines.h">
+      <Filter>arm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\arm\emitter-thumb.h">
+      <Filter>arm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\arm\isa-arm.h">
+      <Filter>arm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\arm\isa-inlines.h">
+      <Filter>arm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\arm\isa-thumb.h">
+      <Filter>arm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\arm\macros.h">
+      <Filter>arm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\arm\arm.h">
+      <Filter>arm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\arm\decoder.h">
+      <Filter>arm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\arm\decoder-inlines.h">
+      <Filter>arm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\gba\hardware.h">
+      <Filter>gba</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\gba\hle-bios.h">
+      <Filter>gba</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\gba\input.h">
+      <Filter>gba</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\gba\io.h">
+      <Filter>gba</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\gba\memory.h">
+      <Filter>gba</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\gba\savedata.h">
+      <Filter>gba</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\gba\serialize.h">
+      <Filter>gba</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\gba\sharkport.h">
+      <Filter>gba</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\gba\sio.h">
+      <Filter>gba</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\gba\video.h">
+      <Filter>gba</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\gba\audio.h">
+      <Filter>gba</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\gba\bios.h">
+      <Filter>gba</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\gba\cheats.h">
+      <Filter>gba</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\gba\gba.h">
+      <Filter>gba</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\gba\renderers\video-software.h">
+      <Filter>gba\renderers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\gba\rr\mgm.h">
+      <Filter>gba\rr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\gba\rr\vbm.h">
+      <Filter>gba\rr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\gba\supervisor\thread.h">
+      <Filter>gba\supervisor</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\util\threading.h">
+      <Filter>util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\util\vector.h">
+      <Filter>util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\util\version.h">
+      <Filter>util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\util\vfs.h">
+      <Filter>util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\util\circle-buffer.h">
+      <Filter>util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\util\common.h">
+      <Filter>util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\util\configuration.h">
+      <Filter>util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\util\crc32.h">
+      <Filter>util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\util\formatting.h">
+      <Filter>util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\util\hash.h">
+      <Filter>util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\util\memory.h">
+      <Filter>util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\util\patch.h">
+      <Filter>util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\util\patch-ips.h">
+      <Filter>util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\util\patch-ups.h">
+      <Filter>util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\util\png-io.h">
+      <Filter>util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\util\socket.h">
+      <Filter>util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\util\string.h">
+      <Filter>util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\util\table.h">
+      <Filter>util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\third-party\blip_buf\blip_buf.h">
+      <Filter>third-party\blip_buf</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\gba\cheats\gameshark.h">
+      <Filter>gba\cheats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\gba\cheats\parv3.h">
+      <Filter>gba\cheats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\gba\cheats\cheats-private.h">
+      <Filter>gba\cheats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\debugger\parser.h">
+      <Filter>debugger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\third-party\inih\ini.h">
+      <Filter>third-party\inih</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

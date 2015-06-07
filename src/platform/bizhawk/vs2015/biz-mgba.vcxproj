@@ -1,0 +1,225 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project InitialTargets="UNDUPOBJ" DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{932BADE4-9CDB-421B-86FE-4942C857B7C6}</ProjectGuid>
+    <RootNamespace>bizmgba</RootNamespace>
+    <TargetPlatformVersion>8.1</TargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v140_xp</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v140_xp</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>B:\svn\bizhawk10\trunk\output\dll</OutDir>
+    <TargetName>mgba</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>B:\svn\bizhawk10\trunk\output\dll</OutDir>
+    <TargetName>mgba</TargetName>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>../../..;../../../arm;$(ProjectDir)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>RESAMPLE_LIBRARY=RESAMPLE_BLIP_BUF;DISABLE_THREADING;_CRT_SECURE_NO_WARNINGS;_USING_V110_SDK71_;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <DisableSpecificWarnings>
+      </DisableSpecificWarnings>
+      <MinimalRebuild>false</MinimalRebuild>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>false</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>false</SDLCheck>
+      <AdditionalIncludeDirectories>../../..;../../../arm;$(ProjectDir)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <FloatingPointModel>Fast</FloatingPointModel>
+      <PreprocessorDefinitions>RESAMPLE_LIBRARY=RESAMPLE_BLIP_BUF;DISABLE_THREADING;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\arm\arm.c" />
+    <ClCompile Include="..\..\..\arm\decoder-arm.c" />
+    <ClCompile Include="..\..\..\arm\decoder-thumb.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\..\arm\decoder.c" />
+    <ClCompile Include="..\..\..\arm\isa-arm.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\..\arm\isa-thumb.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\..\debugger\parser.c" />
+    <ClCompile Include="..\..\..\gba\audio.c" />
+    <ClCompile Include="..\..\..\gba\bios.c" />
+    <ClCompile Include="..\..\..\gba\cheats.c" />
+    <ClCompile Include="..\..\..\gba\cheats\codebreaker.c" />
+    <ClCompile Include="..\..\..\gba\cheats\gameshark.c" />
+    <ClCompile Include="..\..\..\gba\cheats\parv3.c" />
+    <ClCompile Include="..\..\..\gba\gba.c" />
+    <ClCompile Include="..\..\..\gba\hardware.c" />
+    <ClCompile Include="..\..\..\gba\hle-bios.c" />
+    <ClCompile Include="..\..\..\gba\input.c" />
+    <ClCompile Include="..\..\..\gba\io.c" />
+    <ClCompile Include="..\..\..\gba\memory.c" />
+    <ClCompile Include="..\..\..\gba\renderers\video-software.c" />
+    <ClCompile Include="..\..\..\gba\rr\mgm.c" />
+    <ClCompile Include="..\..\..\gba\rr\vbm.c" />
+    <ClCompile Include="..\..\..\gba\savedata.c" />
+    <ClCompile Include="..\..\..\gba\serialize.c" />
+    <ClCompile Include="..\..\..\gba\sharkport.c" />
+    <ClCompile Include="..\..\..\gba\sio.c" />
+    <ClCompile Include="..\..\..\gba\supervisor\overrides.c" />
+    <ClCompile Include="..\..\..\gba\supervisor\thread.c" />
+    <ClCompile Include="..\..\..\gba\video.c" />
+    <ClCompile Include="..\..\..\third-party\blip_buf\blip_buf.c" />
+    <ClCompile Include="..\..\..\third-party\inih\ini.c" />
+    <ClCompile Include="..\..\..\util\circle-buffer.c" />
+    <ClCompile Include="..\..\..\util\configuration.c" />
+    <ClCompile Include="..\..\..\util\crc32.c" />
+    <ClCompile Include="..\..\..\util\formatting.c" />
+    <ClCompile Include="..\..\..\util\hash.c" />
+    <ClCompile Include="..\..\..\util\patch-ips.c" />
+    <ClCompile Include="..\..\..\util\patch-ups.c" />
+    <ClCompile Include="..\..\..\util\patch.c" />
+    <ClCompile Include="..\..\..\util\png-io.c" />
+    <ClCompile Include="..\..\..\util\string.c" />
+    <ClCompile Include="..\..\..\util\table.c" />
+    <ClCompile Include="..\..\..\util\vfs.c" />
+    <ClCompile Include="..\..\..\util\vfs\vfs-mem.c" />
+    <ClCompile Include="..\..\windows\memory.c" />
+    <ClCompile Include="..\bizinterface.c" />
+    <ClCompile Include="precompile\decoder-thumb.i.c" />
+    <ClCompile Include="precompile\isa-arm.i.c" />
+    <ClCompile Include="precompile\isa-thumb.i.c" />
+    <ClCompile Include="version.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\arm\arm.h" />
+    <ClInclude Include="..\..\..\arm\decoder-inlines.h" />
+    <ClInclude Include="..\..\..\arm\decoder.h" />
+    <ClInclude Include="..\..\..\arm\emitter-arm.h" />
+    <ClInclude Include="..\..\..\arm\emitter-inlines.h" />
+    <ClInclude Include="..\..\..\arm\emitter-thumb.h" />
+    <ClInclude Include="..\..\..\arm\isa-arm.h" />
+    <ClInclude Include="..\..\..\arm\isa-inlines.h" />
+    <ClInclude Include="..\..\..\arm\isa-thumb.h" />
+    <ClInclude Include="..\..\..\arm\macros.h" />
+    <ClInclude Include="..\..\..\debugger\parser.h" />
+    <ClInclude Include="..\..\..\gba\audio.h" />
+    <ClInclude Include="..\..\..\gba\bios.h" />
+    <ClInclude Include="..\..\..\gba\cheats.h" />
+    <ClInclude Include="..\..\..\gba\cheats\cheats-private.h" />
+    <ClInclude Include="..\..\..\gba\cheats\gameshark.h" />
+    <ClInclude Include="..\..\..\gba\cheats\parv3.h" />
+    <ClInclude Include="..\..\..\gba\gba.h" />
+    <ClInclude Include="..\..\..\gba\hardware.h" />
+    <ClInclude Include="..\..\..\gba\hle-bios.h" />
+    <ClInclude Include="..\..\..\gba\input.h" />
+    <ClInclude Include="..\..\..\gba\io.h" />
+    <ClInclude Include="..\..\..\gba\memory.h" />
+    <ClInclude Include="..\..\..\gba\renderers\video-software.h" />
+    <ClInclude Include="..\..\..\gba\rr\mgm.h" />
+    <ClInclude Include="..\..\..\gba\rr\vbm.h" />
+    <ClInclude Include="..\..\..\gba\savedata.h" />
+    <ClInclude Include="..\..\..\gba\serialize.h" />
+    <ClInclude Include="..\..\..\gba\sharkport.h" />
+    <ClInclude Include="..\..\..\gba\sio.h" />
+    <ClInclude Include="..\..\..\gba\supervisor\thread.h" />
+    <ClInclude Include="..\..\..\gba\video.h" />
+    <ClInclude Include="..\..\..\third-party\blip_buf\blip_buf.h" />
+    <ClInclude Include="..\..\..\third-party\inih\ini.h" />
+    <ClInclude Include="..\..\..\util\circle-buffer.h" />
+    <ClInclude Include="..\..\..\util\common.h" />
+    <ClInclude Include="..\..\..\util\configuration.h" />
+    <ClInclude Include="..\..\..\util\crc32.h" />
+    <ClInclude Include="..\..\..\util\formatting.h" />
+    <ClInclude Include="..\..\..\util\hash.h" />
+    <ClInclude Include="..\..\..\util\memory.h" />
+    <ClInclude Include="..\..\..\util\patch-ips.h" />
+    <ClInclude Include="..\..\..\util\patch-ups.h" />
+    <ClInclude Include="..\..\..\util\patch.h" />
+    <ClInclude Include="..\..\..\util\png-io.h" />
+    <ClInclude Include="..\..\..\util\socket.h" />
+    <ClInclude Include="..\..\..\util\string.h" />
+    <ClInclude Include="..\..\..\util\table.h" />
+    <ClInclude Include="..\..\..\util\threading.h" />
+    <ClInclude Include="..\..\..\util\vector.h" />
+    <ClInclude Include="..\..\..\util\version.h" />
+    <ClInclude Include="..\..\..\util\vfs.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+  <!-- thanks to http://stackoverflow.com/questions/841913/modify-msbuild-itemgroup-metadata -->
+  <!-- before building, let's modify all the ObjectFileNames according to a pattern which will eliminate the possibility of duplicate .obj names -->
+  <Target Name="UNDUPOBJ">
+    <Message Text="UNDUPOBJ 1: Adjusting ObjectFileName on all ClCompile targets" Importance="low" />
+    <!-- For diagnostics, print each thing we're operating on -->
+    <Message Text="UNDUPOBJ 2: ABOUT TO FIX: %(ClCompile.Identity) with obj path %(ClCompile.ObjectFileName)" Importance="low" />
+    <!-- Now, patch the ClCompile objects with a better ObjectFileName -->
+    <!-- A project which depended on a special and particular name for a handful of object files could add metadata to them in the vcxproj and we could exclude those items here -->
+    <!-- Another idea which I have achieved (but may be less reliable for other users, so it isn't done here) is to leave the directory structure semi-intact and have the obj build in a hierarchy under the IntDir -->
+    <!-- for example, myproj/src/a/x.cpp and myproj/src/b/x.cpp build to myproj/Debug/a/x.obj and myproj/Debug/b/xobj -->
+    <!-- TODO - would something other than Identity be best here? FileName? Etc.? Probably. But Identity has the advantage of removing personal information (build path) from the obj path -->
+    <ItemGroup>
+      <ClCompile>
+        <!-- selectively erase or replace characters in %(Identity) other than A-Za-z0-9 while converting backslashes to underscores -->
+        <ObjectFileName>$(IntDir)$([System.Text.RegularExpressions.Regex]::Replace('%(Identity)','[^A-Za-z0-9\\]','').Replace("\","_") ).obj</ObjectFileName>
+      </ClCompile>
+    </ItemGroup>
+    <!-- For diagnostics, print the results -->
+    <Message Text="UNDUPOBJ 3: %(ClCompile.Identity) obj path set to %(ClCompile.ObjectFileName)" Importance="low" />
+  </Target>
+  <!-- UNDUPOBJ -->
+</Project>

@@ -1,0 +1,7 @@
+/.vs
+/*.user
+/Debug
+/Release
+/precompile/Debug
+/precompile/obj
+/precompile/*.c
