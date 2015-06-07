@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stddef.h>
 #include "util/common.h"
 #include "gba/gba.h"
 #include "gba/renderers/video-software.h"
@@ -48,23 +49,28 @@ typedef struct
 
 static int32_t GetX(struct GBARotationSource* rotationSource)
 {
-    return container_of(rotationSource, bizctx, rotsource)->tiltx << 16;
+	const struct GBARotationSource *__mptr = (rotationSource);
+	return ((bizctx *)((char *)__mptr - offsetof(bizctx, rotsource)))->tiltx << 16;
 }
 static int32_t GetY(struct GBARotationSource* rotationSource)
 {
-    return container_of(rotationSource, bizctx, rotsource)->tilty << 16;
+	const struct GBARotationSource *__mptr = (rotationSource);
+	return ((bizctx *)((char *)__mptr - offsetof(bizctx, rotsource)))->tilty << 16;
 }
 static int32_t GetZ(struct GBARotationSource* rotationSource)
 {
-    return container_of(rotationSource, bizctx, rotsource)->tiltz << 16;
+	const struct GBARotationSource *__mptr = (rotationSource);
+	return ((bizctx *)((char *)__mptr - offsetof(bizctx, rotsource)))->tiltz << 16;
 }
 static uint8_t GetLight(struct GBALuminanceSource* luminanceSource)
 {
-    return container_of(luminanceSource, bizctx, lumasource)->light;
+	const struct GBARotationSource *__mptr = (luminanceSource);
+	return ((bizctx *)((char *)__mptr - offsetof(bizctx, lumasource)))->light;
 }
 static time_t GetTime(struct GBARTCSource* rtcSource)
 {
-    return container_of(rtcSource, bizctx, rtcsource)->time;
+	const struct GBARotationSource *__mptr = (rtcSource);
+	return ((bizctx *)((char *)__mptr - offsetof(bizctx, rtcsource)))->time;
 }
 static void Dummy(const void* unused) { }
 
