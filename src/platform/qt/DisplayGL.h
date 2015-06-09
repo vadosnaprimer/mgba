@@ -13,6 +13,10 @@
 #include <QThread>
 #include <QTimer>
 
+extern "C" {
+#include "platform/opengl/gl.h"
+}
+
 struct GBAThread;
 
 namespace QGBA {
@@ -91,14 +95,11 @@ private:
 	QStaticText m_message;
 	QGLWidget* m_gl;
 	QThread* m_thread;
-	QTimer* m_drawTimer;
+	bool m_active;
 	QTimer m_messageTimer;
 	GBAThread* m_context;
-	GLuint m_tex;
+	GBAGLContext m_backend;
 	QSize m_size;
-	bool m_lockAspectRatio;
-	bool m_filter;
-	QRect m_viewport;
 	QTransform m_world;
 	QFont m_messageFont;
 };

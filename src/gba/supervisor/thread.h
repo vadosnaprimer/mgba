@@ -72,6 +72,7 @@ struct GBAThread {
 	struct GBAAVStream* stream;
 	struct Configuration* overrides;
 	enum GBAIdleLoopOptimization idleOptimization;
+	bool bootBios;
 
 	bool hasOverride;
 	struct GBACartridgeOverride override;
@@ -91,6 +92,7 @@ struct GBAThread {
 	Condition stateCond;
 	enum ThreadState savedState;
 	int interruptDepth;
+	bool frameWasOn;
 
 	GBALogHandler logHandler;
 	int logLevel;
@@ -146,9 +148,7 @@ void GBASyncForceFrame(struct GBASync* sync);
 bool GBASyncWaitFrameStart(struct GBASync* sync, int frameskip);
 void GBASyncWaitFrameEnd(struct GBASync* sync);
 bool GBASyncDrawingFrame(struct GBASync* sync);
-
-void GBASyncSuspendDrawing(struct GBASync* sync);
-void GBASyncResumeDrawing(struct GBASync* sync);
+void GBASyncSetVideoSync(struct GBASync* sync, bool wait);
 
 void GBASyncProduceAudio(struct GBASync* sync, bool wait);
 void GBASyncLockAudio(struct GBASync* sync);

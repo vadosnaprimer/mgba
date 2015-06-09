@@ -20,6 +20,7 @@ Features:
  - Ability to cap fast forward speed
  - Finer control over FPS target
  - Holdable shortcut for rewinding one frame at a time
+ - Ability to boot directly into the BIOS
 Bugfixes:
  - ARM7: Fix SWI and IRQ timings
  - GBA Audio: Force audio FIFOs to 32-bit
@@ -38,6 +39,8 @@ Bugfixes:
  - GBA: Check for improperly sized savestates when loading
  - GBA: Check for savestates made from differently sized ROMs
  - GBA Video: Fix out-of-bounds tiles in mosaic
+ - GBA Memory: Fix potential DMA issue when loading a savestate
+ - GBA Audio: Fix audio pitch changing when adjusting buffer size
 Misc:
  - Qt: Handle saving input settings better
  - Debugger: Free watchpoints in addition to breakpoints
@@ -58,6 +61,8 @@ Misc:
  - Qt: Only hide cursor in full screen
  - Perf: Ability to load savestates immediately on launch
  - Qt: Replace pause-after-frame mutex with an atomic
+ - Util: Allow disabling the threading code entirely
+ - GBA: SIO logging layer
 
 0.2.1: (2015-05-13)
 Bugfixes:

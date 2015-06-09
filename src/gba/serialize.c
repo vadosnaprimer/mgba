@@ -29,8 +29,13 @@ void GBASerialize(struct GBA* gba, struct GBASerializedState* state) {
 	state->biosChecksum = gba->biosChecksum;
 	state->romCrc32 = gba->romCrc32;
 
-	state->id = ((struct GBACartridge*) gba->memory.rom)->id;
-	memcpy(state->title, ((struct GBACartridge*) gba->memory.rom)->title, sizeof(state->title));
+	if (gba->memory.rom) {
+		state->id = ((struct GBACartridge*) gba->memory.rom)->id;
+		memcpy(state->title, ((struct GBACartridge*) gba->memory.rom)->title, sizeof(state->title));
+	} else {
+		state->id = 0;
+		memset(state->title, 0, sizeof(state->title));
+	}
 
 	memcpy(state->cpu.gprs, gba->cpu->gprs, sizeof(state->cpu.gprs));
 	state->cpu.cpsr = gba->cpu->cpsr;
@@ -67,8 +72,11 @@ void GBADeserialize(struct GBA* gba, const struct GBASerializedState* state) {
 			return;
 		}
 	}
-	if (state->id != ((struct GBACartridge*) gba->memory.rom)->id || memcmp(state->title, ((struct GBACartridge*) gba->memory.rom)->title, sizeof(state->title))) {
+	if (gba->memory.rom && (state->id != ((struct GBACartridge*) gba->memory.rom)->id || memcmp(state->title, ((struct GBACartridge*) gba->memory.rom)->title, sizeof(state->title)))) {
 		GBALog(gba, GBA_LOG_WARN, "Savestate is for a different game");
+		return;
+	} else if (!gba->memory.rom && state->id != 0) {
+		GBALog(gba, GBA_LOG_WARN, "Savestate is for a game, but no game loaded");
 		return;
 	}
 	if (state->romCrc32 != gba->romCrc32) {
@@ -78,16 +86,20 @@ void GBADeserialize(struct GBA* gba, const struct GBASerializedState* state) {
 		GBALog(gba, GBA_LOG_WARN, "Savestate is corrupted: CPU cycles are negative");
 		return;
 	}
+	if (state->video.eventDiff < 0) {
+		GBALog(gba, GBA_LOG_WARN, "Savestate is corrupted: video eventDiff is negative");
+		return;
+	}
 	if (state->video.nextHblank - state->video.eventDiff < 0) {
 		GBALog(gba, GBA_LOG_WARN, "Savestate is corrupted: nextHblank is negative");
 		return;
 	}
-	if (state->video.lastHblank - state->video.eventDiff < -VIDEO_HBLANK_LENGTH) {
-		GBALog(gba, GBA_LOG_WARN, "Savestate is corrupted: lastHblank is negative");
-		return;
-	}
 	if (state->timers[0].overflowInterval < 0 || state->timers[1].overflowInterval < 0 || state->timers[2].overflowInterval < 0 || state->timers[3].overflowInterval < 0) {
 		GBALog(gba, GBA_LOG_WARN, "Savestate is corrupted: overflowInterval is negative");
+		return;
+	}
+	if (state->audio.eventDiff < 0) {
+		GBALog(gba, GBA_LOG_WARN, "Savestate is corrupted: audio eventDiff is negative");
 		return;
 	}
 	if (state->audio.ch1.envelopeNextStep < 0 || state->audio.ch1.waveNextStep < 0 || state->audio.ch1.sweepNextStep < 0 || state->audio.ch1.nextEvent < 0) {
