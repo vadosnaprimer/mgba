@@ -68,7 +68,7 @@ static void GBAInit(struct ARMCore* cpu, struct ARMComponent* component) {
 	memset(gba->timers, 0, sizeof(gba->timers));
 
 	gba->springIRQ = 0;
-	gba->keySource = 0;
+    gba->keypadSource = 0;
 	gba->rotationSource = 0;
 	gba->luminanceSource = 0;
 	gba->rtcSource = 0;

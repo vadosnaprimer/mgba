@@ -137,7 +137,7 @@ struct GBA {
 
 	int springIRQ;
 	uint32_t biosChecksum;
-	int* keySource;
+	struct GBAKeypadSource* keypadSource;
 	struct GBARotationSource* rotationSource;
 	struct GBALuminanceSource* luminanceSource;
 	struct GBARTCSource* rtcSource;

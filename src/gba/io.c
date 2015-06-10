@@ -584,8 +584,11 @@ uint16_t GBAIORead(struct GBA* gba, uint32_t address) {
 	case REG_KEYINPUT:
 		if (gba->rr && gba->rr->isPlaying(gba->rr)) {
 			return 0x3FF ^ gba->rr->queryInput(gba->rr);
-		} else if (gba->keySource) {
-			uint16_t input = *gba->keySource;
+		} else if (gba->keypadSource) {
+		    if (gba->keypadSource->sample) {
+                gba->keypadSource->sample(gba->keypadSource);
+		    }
+			uint16_t input = gba->keypadSource->readKeys(gba->keypadSource);
 			if (gba->rr && gba->rr->isRecording(gba->rr)) {
 				gba->rr->logInput(gba->rr, input);
 			}

@@ -14,6 +14,11 @@
 
 #define IS_GPIO_REGISTER(reg) ((reg) == GPIO_REG_DATA || (reg) == GPIO_REG_DIRECTION || (reg) == GPIO_REG_CONTROL)
 
+struct GBAKeypadSource {
+    void (*sample)(struct GBAKeypadSource*);
+    uint16_t (*readKeys)(struct GBAKeypadSource*);
+};
+
 struct GBARotationSource {
 	void (*sample)(struct GBARotationSource*);
 

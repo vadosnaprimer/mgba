@@ -45,7 +45,6 @@ static BOOL CALLBACK _createTLS(PINIT_ONCE once, PVOID param, PVOID* context) {
 	return TRUE;
 }
 #endif
-#endif
 
 static void _changeState(struct GBAThread* threadContext, enum ThreadState newState, bool broadcast) {
 	MutexLock(&threadContext->stateMutex);
