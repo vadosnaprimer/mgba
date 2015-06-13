@@ -177,6 +177,11 @@ EXP void BizReset(bizctx* ctx)
     ARMReset(&ctx->cpu);
 }
 
+EXP void BizSkipBios(bizctx* ctx)
+{
+    GBASkipBIOS(&ctx->cpu);
+}
+
 EXP int BizLoad(bizctx* ctx, const void* data, int length)
 {
     ctx->rom = malloc(length);
