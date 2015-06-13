@@ -87,7 +87,7 @@ static void LightCB(struct GBALuminanceSource* luminanceSource)
 static void TimeCB(struct GBARTCSource* rtcSource)
 {
     bizctx* ctx = container_of(rtcSource, bizctx, rtcsource);
-    ctx->lagged = FALSE;
+    // ctx->lagged = FALSE;
 }
 static void KeyCB(struct GBAKeypadSource* keypadSource)
 {
