@@ -63,6 +63,7 @@
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -81,6 +82,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <SubSystem>Windows</SubSystem>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -201,25 +203,56 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
-  <!-- thanks to http://stackoverflow.com/questions/841913/modify-msbuild-itemgroup-metadata -->
-  <!-- before building, let's modify all the ObjectFileNames according to a pattern which will eliminate the possibility of duplicate .obj names -->
+  <!-- ================ UNDUPOBJ ================ -->
+  <!-- relevant topics -->
+  <!-- http://stackoverflow.com/questions/3729515/visual-studio-2010-2008-cant-handle-source-files-with-identical-names-in-diff/26935613 -->
+  <!-- http://stackoverflow.com/questions/7033855/msvc10-mp-builds-not-multicore-across-folders-in-a-project -->
+  <!-- http://stackoverflow.com/questions/18304911/how-can-one-modify-an-itemdefinitiongroup-from-an-msbuild-target -->
+  <!-- other maybe related info -->
+  <!-- http://stackoverflow.com/questions/841913/modify-msbuild-itemgroup-metadata -->
+  <UsingTask TaskName="UNDUPOBJ_TASK" TaskFactory="CodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.v4.0.dll">
+    <ParameterGroup>
+      <OutputDir ParameterType="System.String" Required="true" />
+      <ItemList ParameterType="Microsoft.Build.Framework.ITaskItem[]" Required="true" />
+      <OutputItemList ParameterType="Microsoft.Build.Framework.ITaskItem[]" Output="true" />
+    </ParameterGroup>
+    <Task>
+      <Code><![CDATA[
+							//general outline: for each item (in ClCompile) assign it to a subdirectory of $(IntDir) by allocating subdirectories 0,1,2, etc., as needed to prevent duplicate filenames from clobbering each other
+							//this minimizes the number of batches that need to be run, since each subdirectory will necessarily be in a distinct batch due to /Fo specifying that output subdirectory
+
+							var assignmentMap = new Dictionary<string,int>();
+							foreach( var item in ItemList )
+							{
+								var filename = item.GetMetadata("Filename");
+
+								//assign reused filenames to increasing numbers
+								//assign previously unused filenames to 0
+								int assignment = 0;
+								if(assignmentMap.TryGetValue(filename, out assignment))
+									assignmentMap[filename] = ++assignment;
+								else
+									assignmentMap[filename] = 0;
+
+								var thisFileOutdir = Path.Combine(OutputDir,assignment.ToString()) + "/"; //take care it ends in / so /Fo knows it's a directory and not a filename
+								item.SetMetadata( "ObjectFileName", thisFileOutdir );
+							}
+							
+							OutputItemList = ItemList;
+							ItemList = new Microsoft.Build.Framework.ITaskItem[0];
+
+					]]></Code>
+    </Task>
+  </UsingTask>
   <Target Name="UNDUPOBJ">
-    <Message Text="UNDUPOBJ 1: Adjusting ObjectFileName on all ClCompile targets" Importance="low" />
-    <!-- For diagnostics, print each thing we're operating on -->
-    <Message Text="UNDUPOBJ 2: ABOUT TO FIX: %(ClCompile.Identity) with obj path %(ClCompile.ObjectFileName)" Importance="low" />
-    <!-- Now, patch the ClCompile objects with a better ObjectFileName -->
-    <!-- A project which depended on a special and particular name for a handful of object files could add metadata to them in the vcxproj and we could exclude those items here -->
-    <!-- Another idea which I have achieved (but may be less reliable for other users, so it isn't done here) is to leave the directory structure semi-intact and have the obj build in a hierarchy under the IntDir -->
-    <!-- for example, myproj/src/a/x.cpp and myproj/src/b/x.cpp build to myproj/Debug/a/x.obj and myproj/Debug/b/xobj -->
-    <!-- TODO - would something other than Identity be best here? FileName? Etc.? Probably. But Identity has the advantage of removing personal information (build path) from the obj path -->
+    <!-- see stackoverflow topics for discussion on why we need to do some loopy copying stuff here -->
     <ItemGroup>
-      <ClCompile>
-        <!-- selectively erase or replace characters in %(Identity) other than A-Za-z0-9 while converting backslashes to underscores -->
-        <ObjectFileName>$(IntDir)$([System.Text.RegularExpressions.Regex]::Replace('%(Identity)','[^A-Za-z0-9\\]','').Replace("\","_") ).obj</ObjectFileName>
-      </ClCompile>
+      <ClCompileCopy Include="@(ClCompile)" />
+      <ClCompile Remove="@(ClCompile)" />
     </ItemGroup>
-    <!-- For diagnostics, print the results -->
-    <Message Text="UNDUPOBJ 3: %(ClCompile.Identity) obj path set to %(ClCompile.ObjectFileName)" Importance="low" />
+    <UNDUPOBJ_TASK OutputDir="$(IntDir)" ItemList="@(ClCompileCopy)" OutputItemList="@(ClCompile)">
+      <Output ItemName="ClCompile" TaskParameter="OutputItemList" />
+    </UNDUPOBJ_TASK>
   </Target>
-  <!-- UNDUPOBJ -->
+  <!-- ================ UNDUPOBJ ================ -->
 </Project>
