@@ -42,11 +42,9 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>B:\svn\bizhawk10\trunk\output\dll</OutDir>
     <TargetName>mgba</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>B:\svn\bizhawk10\trunk\output\dll</OutDir>
     <TargetName>mgba</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -88,19 +86,10 @@
   <ItemGroup>
     <ClCompile Include="..\..\..\arm\arm.c" />
     <ClCompile Include="..\..\..\arm\decoder-arm.c" />
-    <ClCompile Include="..\..\..\arm\decoder-thumb.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
+    <ClCompile Include="..\..\..\arm\decoder-thumb.c" />
     <ClCompile Include="..\..\..\arm\decoder.c" />
-    <ClCompile Include="..\..\..\arm\isa-arm.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\..\arm\isa-thumb.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
+    <ClCompile Include="..\..\..\arm\isa-arm.c" />
+    <ClCompile Include="..\..\..\arm\isa-thumb.c" />
     <ClCompile Include="..\..\..\debugger\parser.c" />
     <ClCompile Include="..\..\..\gba\audio.c" />
     <ClCompile Include="..\..\..\gba\bios.c" />
@@ -141,9 +130,6 @@
     <ClCompile Include="..\..\..\util\vfs\vfs-mem.c" />
     <ClCompile Include="..\..\windows\memory.c" />
     <ClCompile Include="..\bizinterface.c" />
-    <ClCompile Include="precompile\decoder-thumb.i.c" />
-    <ClCompile Include="precompile\isa-arm.i.c" />
-    <ClCompile Include="precompile\isa-thumb.i.c" />
     <ClCompile Include="version.c" />
   </ItemGroup>
   <ItemGroup>

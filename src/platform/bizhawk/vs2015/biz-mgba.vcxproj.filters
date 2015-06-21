@@ -49,9 +49,6 @@
     <Filter Include="platform\bizhawk\vs2015">
       <UniqueIdentifier>{e0179834-ef65-48c9-8ff6-64e2e128ca35}</UniqueIdentifier>
     </Filter>
-    <Filter Include="platform\bizhawk\vs2015\precompile">
-      <UniqueIdentifier>{b9ec405f-368d-4af4-a1bf-0b4201eb7188}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\bizinterface.c">
@@ -194,15 +191,6 @@
     </ClCompile>
     <ClCompile Include="..\..\..\third-party\inih\ini.c">
       <Filter>third-party\inih</Filter>
-    </ClCompile>
-    <ClCompile Include="precompile\isa-thumb.i.c">
-      <Filter>platform\bizhawk\vs2015\precompile</Filter>
-    </ClCompile>
-    <ClCompile Include="precompile\decoder-thumb.i.c">
-      <Filter>platform\bizhawk\vs2015\precompile</Filter>
-    </ClCompile>
-    <ClCompile Include="precompile\isa-arm.i.c">
-      <Filter>platform\bizhawk\vs2015\precompile</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
