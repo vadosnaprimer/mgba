@@ -68,7 +68,7 @@ static void GBAInit(struct ARMCore* cpu, struct ARMComponent* component) {
 	memset(gba->timers, 0, sizeof(gba->timers));
 
 	gba->springIRQ = 0;
-	gba->keySource = 0;
+    gba->keypadSource = 0;
 	gba->rotationSource = 0;
 	gba->luminanceSource = 0;
 	gba->rtcSource = 0;
@@ -633,10 +633,18 @@ bool GBAIsBIOS(struct VFile* vf) {
 }
 
 void GBAGetGameCode(struct GBA* gba, char* out) {
+	if (!gba->memory.rom) {
+		out[0] = '\0';
+		return;
+	}
 	memcpy(out, &((struct GBACartridge*) gba->memory.rom)->id, 4);
 }
 
 void GBAGetGameTitle(struct GBA* gba, char* out) {
+	if (!gba->memory.rom) {
+		strncpy(out, "(BIOS)", 12);
+		return;
+	}
 	memcpy(out, &((struct GBACartridge*) gba->memory.rom)->title, 12);
 }
 

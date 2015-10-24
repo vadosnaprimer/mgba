@@ -46,8 +46,9 @@ enum GBALogLevel {
 	GBA_LOG_GAME_ERROR = 0x100,
 	GBA_LOG_SWI = 0x200,
 	GBA_LOG_STATUS = 0x400,
+	GBA_LOG_SIO = 0x800,
 
-	GBA_LOG_ALL = 0x73F,
+	GBA_LOG_ALL = 0xF3F,
 
 #ifdef NDEBUG
 	GBA_LOG_DANGER = GBA_LOG_ERROR
@@ -136,7 +137,7 @@ struct GBA {
 
 	int springIRQ;
 	uint32_t biosChecksum;
-	int* keySource;
+	struct GBAKeypadSource* keypadSource;
 	struct GBARotationSource* rotationSource;
 	struct GBALuminanceSource* luminanceSource;
 	struct GBARTCSource* rtcSource;

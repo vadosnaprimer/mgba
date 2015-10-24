@@ -40,11 +40,14 @@ typedef struct
     struct GBARotationSource rotsource;
     struct GBARTCSource rtcsource;
     struct GBALuminanceSource lumasource;
+    struct GBAKeypadSource keysource;
     int16_t tiltx;
     int16_t tilty;
     int16_t tiltz;
     int64_t time;
     uint8_t light;
+    uint16_t keys;
+    int lagged;
 } bizctx;
 
 static int32_t GetX(struct GBARotationSource* rotationSource)
@@ -72,7 +75,31 @@ static time_t GetTime(struct GBARTCSource* rtcSource)
 	const struct GBARotationSource *__mptr = (rtcSource);
 	return ((bizctx *)((char *)__mptr - offsetof(bizctx, rtcsource)))->time;
 }
-static void Dummy(const void* unused) { }
+static uint16_t GetKeys(struct GBAKeypadSource* keypadSource)
+{
+    return container_of(keypadSource, bizctx, keysource)->keys;
+}
+
+static void RotationCB(struct GBARotationSource* rotationSource)
+{
+    bizctx* ctx = container_of(rotationSource, bizctx, rotsource);
+    ctx->lagged = FALSE;
+}
+static void LightCB(struct GBALuminanceSource* luminanceSource)
+{
+    bizctx* ctx = container_of(luminanceSource, bizctx, lumasource);
+    ctx->lagged = FALSE;
+}
+static void TimeCB(struct GBARTCSource* rtcSource)
+{
+    bizctx* ctx = container_of(rtcSource, bizctx, rtcsource);
+    // ctx->lagged = FALSE;
+}
+static void KeyCB(struct GBAKeypadSource* keypadSource)
+{
+    bizctx* ctx = container_of(keypadSource, bizctx, keysource);
+    ctx->lagged = FALSE;
+}
 
 static void logdebug(struct GBAThread* thread, enum GBALogLevel level, const char* format, va_list args)
 {
@@ -112,6 +139,7 @@ EXP bizctx* BizCreate(const void* bios)
         ctx->gba.rtcSource = &ctx->rtcsource;
         ctx->gba.luminanceSource = &ctx->lumasource;
         ctx->gba.rotationSource = &ctx->rotsource;
+        ctx->gba.keypadSource = &ctx->keysource;
 
         GBAVideoSoftwareRendererCreate(&ctx->renderer);
         ctx->renderer.outputBuffer = ctx->vbuff;
@@ -136,14 +164,16 @@ EXP bizctx* BizCreate(const void* bios)
             GBALoadBIOS(&ctx->gba, ctx->biosvf);
         }
 
-        ctx->rotsource.sample = Dummy;
+        ctx->rotsource.sample = RotationCB;
         ctx->rotsource.readTiltX = GetX;
         ctx->rotsource.readTiltY = GetY;
         ctx->rotsource.readGyroZ = GetZ;
-        ctx->lumasource.sample = Dummy;
+        ctx->lumasource.sample = LightCB;
         ctx->lumasource.readLuminance = GetLight;
-        ctx->rtcsource.sample = Dummy;
+        ctx->rtcsource.sample = TimeCB;
         ctx->rtcsource.unixTime = GetTime;
+        ctx->keysource.sample = KeyCB;
+        ctx->keysource.readKeys = GetKeys;
     }
     return ctx;
 }
@@ -151,6 +181,11 @@ EXP bizctx* BizCreate(const void* bios)
 EXP void BizReset(bizctx* ctx)
 {
     ARMReset(&ctx->cpu);
+}
+
+EXP void BizSkipBios(bizctx* ctx)
+{
+    GBASkipBIOS(&ctx->cpu);
 }
 
 EXP int BizLoad(bizctx* ctx, const void* data, int length)
@@ -224,15 +259,16 @@ static void blit(void* dst_, const void* src_)
     }
 }
 
-EXP void BizAdvance(bizctx* ctx, int keys, color_t* vbuff, int* nsamp, int16_t* sbuff,
+EXP int BizAdvance(bizctx* ctx, uint16_t keys, color_t* vbuff, int* nsamp, int16_t* sbuff,
     int64_t time, int16_t gyrox, int16_t gyroy, int16_t gyroz, uint8_t luma)
 {
-    ctx->gba.keySource = &keys;
+    ctx->keys = keys;
     ctx->light = luma;
     ctx->time = time;
     ctx->tiltx = gyrox;
     ctx->tilty = gyroy;
     ctx->tiltz = gyroz;
+    ctx->lagged = TRUE;
     int frameCount = ctx->gba.video.frameCounter;
     while (frameCount == ctx->gba.video.frameCounter)
     {
@@ -244,6 +280,7 @@ EXP void BizAdvance(bizctx* ctx, int keys, color_t* vbuff, int* nsamp, int16_t* 
         *nsamp = 1024;
     blip_read_samples(ctx->gba.audio.left, sbuff, 1024, TRUE);
     blip_read_samples(ctx->gba.audio.right, sbuff + 1, 1024, TRUE);
+    return ctx->lagged;
 }
 
 struct MemoryAreas

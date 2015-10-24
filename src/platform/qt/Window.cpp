@@ -482,7 +482,9 @@ void Window::gameStarted(GBAThread* context) {
 	foreach (QAction* action, m_gameActions) {
 		action->setDisabled(false);
 	}
-	appendMRU(context->fname);
+	if (context->fname) {
+		appendMRU(context->fname);
+	}
 	updateTitle();
 	attachWidget(m_display);
 
@@ -609,6 +611,7 @@ void Window::setupMenu(QMenuBar* menubar) {
 	addControlledAction(fileMenu, fileMenu->addAction(tr("Load &ROM..."), this, SLOT(selectROM()), QKeySequence::Open), "loadROM");
 	addControlledAction(fileMenu, fileMenu->addAction(tr("Load &BIOS..."), this, SLOT(selectBIOS())), "loadBIOS");
 	addControlledAction(fileMenu, fileMenu->addAction(tr("Load &patch..."), this, SLOT(selectPatch())), "loadPatch");
+	addControlledAction(fileMenu, fileMenu->addAction(tr("Boot BIOS"), m_controller, SLOT(bootBIOS())), "bootBIOS");
 
 	m_mruMenu = fileMenu->addMenu(tr("Recent"));
 
@@ -742,7 +745,7 @@ void Window::setupMenu(QMenuBar* menubar) {
 	ffspeed->addValue(tr("Unbounded"), -1.0f, ffspeedMenu);
 	ffspeed->setValue(QVariant(-1.0f));
 	ffspeedMenu->addSeparator();
-	for (i = 2; i < 6; ++i) {
+	for (i = 2; i < 11; ++i) {
 		ffspeed->addValue(tr("%0x").arg(i), i, ffspeedMenu);
 	}
 	m_config->updateOption("fastForwardRatio");

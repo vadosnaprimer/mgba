@@ -14,6 +14,11 @@
 
 #define IS_GPIO_REGISTER(reg) ((reg) == GPIO_REG_DATA || (reg) == GPIO_REG_DIRECTION || (reg) == GPIO_REG_CONTROL)
 
+struct GBAKeypadSource {
+    void (*sample)(struct GBAKeypadSource*);
+    uint16_t (*readKeys)(struct GBAKeypadSource*);
+};
+
 struct GBARotationSource {
 	void (*sample)(struct GBARotationSource*);
 
@@ -78,11 +83,11 @@ DECL_BIT(RTCCommandData, Reading, 7);
 #pragma pack(push,1)
 #endif
 struct GBARTC {
-	int bytesRemaining;
-	int transferStep;
-	int bitsRead;
-	int bits;
-	int commandActive;
+	int32_t bytesRemaining;
+	int32_t transferStep;
+	int32_t bitsRead;
+	int32_t bits;
+	int32_t commandActive;
 	RTCCommandData command;
 	RTCControl control;
 	uint8_t time[7];
