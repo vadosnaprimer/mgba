@@ -77,28 +77,29 @@ static time_t GetTime(struct GBARTCSource* rtcSource)
 }
 static uint16_t GetKeys(struct GBAKeypadSource* keypadSource)
 {
-    return container_of(keypadSource, bizctx, keysource)->keys;
+	const struct GBARotationSource *__mptr = (keypadSource);
+	return ((bizctx *)((char *)__mptr - offsetof(bizctx, keysource)))->keys;
 }
 
 static void RotationCB(struct GBARotationSource* rotationSource)
 {
-    bizctx* ctx = container_of(rotationSource, bizctx, rotsource);
-    ctx->lagged = FALSE;
+	const struct GBARotationSource *__mptr = (rotationSource);
+	((bizctx *)((char *)__mptr - offsetof(bizctx, rotsource)))->lagged = FALSE;
 }
 static void LightCB(struct GBALuminanceSource* luminanceSource)
 {
-    bizctx* ctx = container_of(luminanceSource, bizctx, lumasource);
-    ctx->lagged = FALSE;
+	const struct GBARotationSource *__mptr = (luminanceSource);
+	((bizctx *)((char *)__mptr - offsetof(bizctx, lumasource)))->lagged = FALSE;
 }
 static void TimeCB(struct GBARTCSource* rtcSource)
 {
-    bizctx* ctx = container_of(rtcSource, bizctx, rtcsource);
+    //bizctx* ctx = container_of(rtcSource, bizctx, rtcsource);
     // ctx->lagged = FALSE;
 }
 static void KeyCB(struct GBAKeypadSource* keypadSource)
 {
-    bizctx* ctx = container_of(keypadSource, bizctx, keysource);
-    ctx->lagged = FALSE;
+	const struct GBARotationSource *__mptr = (keypadSource);
+	((bizctx *)((char *)__mptr - offsetof(bizctx, keysource)))->lagged = FALSE;
 }
 
 static void logdebug(struct GBAThread* thread, enum GBALogLevel level, const char* format, va_list args)
