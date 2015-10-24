@@ -109,12 +109,12 @@ static void logdebug(struct GBAThread* thread, enum GBALogLevel level, const cha
 
 EXP void BizDestroy(bizctx* ctx)
 {
-    ctx->romvf->close(ctx->romvf);
+	//these will be freed by GBADestroy
     ctx->romvf = NULL;
+    ctx->biosvf = NULL;
+
     free(ctx->rom);
     ctx->rom = NULL;
-    if (ctx->biosvf != NULL)
-        ctx->biosvf->close(ctx->biosvf);
     ctx->sramvf->close(ctx->sramvf);
 
     // TODO: this seems short.  is there anything else that needs to happen here?
