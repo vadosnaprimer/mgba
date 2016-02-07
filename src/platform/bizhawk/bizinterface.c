@@ -23,11 +23,6 @@
 void ARMDebuggerEnter(struct ARMDebugger* u1, enum DebuggerEntryReason u2, struct DebuggerEntryInfo* u3) { }
 struct VFile* VFileOpenFD(const char* path, int flags) { return NULL; }
 
-struct tm *localtime_r(const time_t *timeval, struct tm *result)
-{
-    return NULL;
-}
-
 typedef struct
 {
     struct GBA gba;
