@@ -33,13 +33,13 @@
 			<Add option="-march=i686" />
 			<Add option="-Wall" />
 			<Add option="-std=gnu99" />
+			<Add option="-fgnu89-inline" />
 			<Add option="-DRESAMPLE_LIBRARY=RESAMPLE_BLIP_BUF" />
 			<Add option="-DDISABLE_THREADING" />
 			<Add option="-DHAVE_LOCALTIME_R" />
 			<Add option="-DMINIMAL_CORE=2" />
 			<Add directory="../../../../src" />
 			<Add directory="../../../arm" />
-			<Add directory=".." />
 		</Compiler>
 		<Linker>
 			<Add option="-static-libgcc" />
@@ -227,6 +227,9 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../bizinterface.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../localtime_r.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Extensions>
