@@ -337,3 +337,13 @@ EXP int BizPutState(bizctx* ctx, const void* data)
 {
     return GBADeserialize(&ctx->gba, data);
 }
+
+EXP void BizSetLayerMask(bizctx *ctx, int mask)
+{
+    struct GBAVideoRenderer *r = &ctx->renderer.d;
+    r->disableBG[0] = !(mask & 1);
+    r->disableBG[0] = !(mask & 2);
+    r->disableBG[0] = !(mask & 4);
+    r->disableBG[0] = !(mask & 8);
+    r->disableOBJ = !(mask & 16);
+}
