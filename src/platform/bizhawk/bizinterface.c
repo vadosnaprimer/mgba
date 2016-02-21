@@ -47,6 +47,7 @@ typedef struct
     uint8_t light;
     uint16_t keys;
     int lagged;
+    int statemaxsize;
 } bizctx;
 
 static int32_t GetX(struct GBARotationSource* rotationSource)
@@ -95,6 +96,8 @@ static void logdebug(struct GBAThread* thread, enum GBALogLevel level, const cha
 
 }
 
+static void ComputeStateSize(bizctx *ctx);
+
 EXP void BizDestroy(bizctx* ctx)
 {
     //these will be freed by GBADestroy
@@ -112,9 +115,9 @@ EXP void BizDestroy(bizctx* ctx)
 EXP bizctx* BizCreate(const void* bios)
 {
     bizctx* ctx = calloc(1, sizeof(*ctx));
-    memset(ctx->savedata, 0xff, sizeof(ctx->savedata));
     if (ctx)
     {
+        memset(ctx->savedata, 0xff, sizeof(ctx->savedata));
         GBACreate(&ctx->gba);
         ARMSetComponents(&ctx->cpu, &ctx->gba.d, 0, NULL);
         ARMInit(&ctx->cpu);
@@ -206,6 +209,7 @@ EXP int BizLoad(bizctx* ctx, const void* data, int length)
 	}
 
     BizReset(ctx);
+    ComputeStateSize(ctx);
     return 1;
 }
 
@@ -323,19 +327,37 @@ EXP void BizPutSaveRam(bizctx* ctx, const void* data)
     memcpy(ctx->savedata, data, BizGetSaveRamSize(ctx));
 }
 
-EXP int BizGetStateSize()
+static void ComputeStateSize(bizctx *ctx)
 {
-    return sizeof(struct GBASerializedState);
+    struct VFile *f = VFileMemChunk(NULL, 0);
+    GBASaveStateNamed(&ctx->gba, f, SAVESTATE_SAVEDATA);
+    ctx->statemaxsize = f->size(f);
+    f->close(f);
 }
 
-EXP void BizGetState(bizctx* ctx, void* data)
+// the size of a savestate will never get bigger than this post-load,
+// but it could get smaller if the game autodetects down to 8K/32K
+EXP int BizGetStateMaxSize(bizctx *ctx)
 {
-    GBASerialize(&ctx->gba, data);
+    return ctx->statemaxsize;
 }
 
-EXP int BizPutState(bizctx* ctx, const void* data)
+EXP int BizGetState(bizctx* ctx, void* data, int size)
 {
-    return GBADeserialize(&ctx->gba, data);
+    struct VFile *f = VFileFromMemory(data, size);
+    if (!GBASaveStateNamed(&ctx->gba, f, SAVESTATE_SAVEDATA))
+        return -1;
+    int ret = f->size(f);
+    f->close(f);
+    return ret;
+}
+
+EXP int BizPutState(bizctx* ctx, const void* data, int size)
+{
+    struct VFile *f = VFileFromConstMemory(data, size);
+    int ret = GBALoadStateNamed(&ctx->gba, f, SAVESTATE_SAVEDATA);
+    f->close(f);
+    return ret;
 }
 
 EXP void BizSetLayerMask(bizctx *ctx, int mask)
