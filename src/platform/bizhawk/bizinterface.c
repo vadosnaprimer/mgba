@@ -331,7 +331,7 @@ static void ComputeStateSize(bizctx *ctx)
 {
     struct VFile *f = VFileMemChunk(NULL, 0);
     GBASaveStateNamed(&ctx->gba, f, SAVESTATE_SAVEDATA);
-    ctx->statemaxsize = f->size(f);
+    ctx->statemaxsize = f->seek(f, 0, SEEK_CUR);
     f->close(f);
 }
 
@@ -347,7 +347,7 @@ EXP int BizGetState(bizctx* ctx, void* data, int size)
     struct VFile *f = VFileFromMemory(data, size);
     if (!GBASaveStateNamed(&ctx->gba, f, SAVESTATE_SAVEDATA))
         return -1;
-    int ret = f->size(f);
+    int ret = f->seek(f, 0, SEEK_CUR);
     f->close(f);
     return ret;
 }
