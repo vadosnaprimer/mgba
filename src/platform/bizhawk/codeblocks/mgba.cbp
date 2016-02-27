@@ -23,9 +23,14 @@
 					<Add option="-fomit-frame-pointer" />
 					<Add option="-fexpensive-optimizations" />
 					<Add option="-O3" />
+					<Add option="-flto" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
+					<Add option="-flto" />
+					<Add option="-O3" />
+					<Add option="-fomit-frame-pointer" />
+					<Add option="-fexpensive-optimizations" />
 				</Linker>
 			</Target>
 		</Build>
