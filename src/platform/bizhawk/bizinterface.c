@@ -7,6 +7,8 @@
 #include "gba/video.h"
 #include "util/vfs.h"
 
+const char* const binaryName = "mgba";
+
 #define EXP __declspec(dllexport)
 
 /**

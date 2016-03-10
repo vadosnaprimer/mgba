@@ -15,7 +15,9 @@
 #endif
 
 #ifndef HAVE_LOCALE
+#ifndef _XLOCALE_H_
 typedef const char* locale_t;
+#endif
 #endif
 
 int ftostr_l(char* restrict str, size_t size, float f, locale_t locale);
