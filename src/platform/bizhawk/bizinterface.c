@@ -286,19 +286,9 @@ struct MemoryAreas
     const void* vram;
     const void* oam;
     const void* rom;
+    const void* sram;
+    uint32_t sram_size;
 };
-
-EXP void BizGetMemoryAreas(bizctx* ctx, struct MemoryAreas* dst)
-{
-    dst->bios = ctx->gba.memory.bios;
-    dst->wram = ctx->gba.memory.wram;
-    dst->iwram = ctx->gba.memory.iwram;
-    dst->mmio = ctx->gba.memory.io;
-    dst->palram = ctx->gba.video.palette;
-    dst->vram = ctx->gba.video.renderer->vram;
-    dst->oam = ctx->gba.video.oam.raw;
-    dst->rom = ctx->gba.memory.rom;
-}
 
 EXP int BizGetSaveRamSize(bizctx* ctx)
 {
@@ -317,6 +307,20 @@ EXP int BizGetSaveRamSize(bizctx* ctx)
     default:
 		return 0;
 	}
+}
+
+EXP void BizGetMemoryAreas(bizctx* ctx, struct MemoryAreas* dst)
+{
+    dst->bios = ctx->gba.memory.bios;
+    dst->wram = ctx->gba.memory.wram;
+    dst->iwram = ctx->gba.memory.iwram;
+    dst->mmio = ctx->gba.memory.io;
+    dst->palram = ctx->gba.video.palette;
+    dst->vram = ctx->gba.video.renderer->vram;
+    dst->oam = ctx->gba.video.oam.raw;
+    dst->rom = ctx->gba.memory.rom;
+    dst->sram = ctx->savedata;
+    dst->sram_size = BizGetSaveRamSize(ctx);
 }
 
 EXP void BizGetSaveRam(bizctx* ctx, void* data)
