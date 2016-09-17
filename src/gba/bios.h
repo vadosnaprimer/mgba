@@ -8,7 +8,10 @@
 
 #include "util/common.h"
 
-#include "arm.h"
+#include "arm/arm.h"
+#include "core/log.h"
+
+mLOG_DECLARE_CATEGORY(GBA_BIOS);
 
 void GBASwi16(struct ARMCore* cpu, int immediate);
 void GBASwi32(struct ARMCore* cpu, int immediate);

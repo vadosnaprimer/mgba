@@ -12,12 +12,8 @@
 
 #if defined(__APPLE__) || defined(__FreeBSD__)
 #include "xlocale.h"
-#endif
-
-#ifndef HAVE_LOCALE
-#ifndef _XLOCALE_H_
+#elif !defined(HAVE_LOCALE)
 typedef const char* locale_t;
-#endif
 #endif
 
 int ftostr_l(char* restrict str, size_t size, float f, locale_t locale);
