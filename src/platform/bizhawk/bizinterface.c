@@ -180,7 +180,14 @@ EXP void BizSkipBios(bizctx* ctx)
     GBASkipBIOS(&ctx->gba);
 }
 
-EXP int BizLoad(bizctx* ctx, const void* data, int length)
+typedef struct
+{
+	enum SavedataType savetype;
+	enum GBAHardwareDevice hardware;
+	uint32_t idleLoop;
+} overrideinfo;
+
+EXP int BizLoad(bizctx* ctx, const void* data, int length, const overrideinfo* dbinfo)
 {
     ctx->rom = malloc(length);
     if (!ctx->rom)
@@ -205,7 +212,14 @@ EXP int BizLoad(bizctx* ctx, const void* data, int length)
     struct GBACartridgeOverride override;
 	const struct GBACartridge* cart = (const struct GBACartridge*) ctx->gba.memory.rom;
 	memcpy(override.id, &cart->id, sizeof(override.id));
-	if (GBAOverrideFind(NULL, &override))
+	if (dbinfo) // front end override
+	{
+		override.savetype = dbinfo->savetype;
+		override.hardware = dbinfo->hardware;
+		override.idleLoop = dbinfo->idleLoop;
+		GBAOverrideApply(&ctx->gba, &override);
+	}
+	else if (GBAOverrideFind(NULL, &override)) // built in override
     {
 		GBAOverrideApply(&ctx->gba, &override);
 	}
