@@ -1,183 +1,105 @@
 #include <stdlib.h>
+#include "core/core.h"
 #include "util/common.h"
 #include "gba/gba.h"
 #include "gba/renderers/video-software.h"
 #include "gba/serialize.h"
-#include "gba/context/overrides.h"
+#include "gba/overrides.h"
 #include "gba/video.h"
 #include "util/vfs.h"
 
 const char* const binaryName = "mgba";
+const uint32_t DEBUGGER_ID = 0xFEEDFACE;
 
 #define EXP __declspec(dllexport)
 
 /**
  * container_of - cast a member of a structure out to the containing structure
- * @ptr:        the pointer to the member.
- * @type:       the type of the container struct this is embedded in.
- * @member:     the name of the member within the struct.
+ * @ptr:		the pointer to the member.
+ * @type:	   the type of the container struct this is embedded in.
+ * @member:	 the name of the member within the struct.
  *
  */
-#define container_of(ptr, type, member) ({                      \
-        const typeof( ((type *)0)->member ) *__mptr = (ptr);    \
-        (type *)( (char *)__mptr - offsetof(type,member) );})
-
-void ARMDebuggerEnter(struct ARMDebugger* u1, enum DebuggerEntryReason u2, struct DebuggerEntryInfo* u3) { }
+#define container_of(ptr, type, member) ({					  \
+		const typeof( ((type *)0)->member ) *__mptr = (ptr);	\
+		(type *)( (char *)__mptr - offsetof(type,member) );})
+void mDebuggerEnter(struct mDebugger* debugger, enum mDebuggerEntryReason reason, struct mDebuggerEntryInfo* info) { }
 struct VFile* VFileOpenFD(const char* path, int flags) { return NULL; }
 
 typedef struct
 {
-    struct GBA gba;
-    struct ARMCore cpu;
-    struct GBAVideoSoftwareRenderer renderer;
-    struct GBAAVStream stream;
-    color_t vbuff[VIDEO_HORIZONTAL_PIXELS * VIDEO_VERTICAL_PIXELS];
-    void* rom;
-    struct VFile* romvf;
-    char bios[16384];
-    struct VFile* biosvf;
-    char savedata[SIZE_CART_FLASH1M];
-    struct VFile* sramvf;
-    struct GBARotationSource rotsource;
-    struct GBARTCSource rtcsource;
-    struct GBALuminanceSource lumasource;
-    struct GBAKeyCallback keysource;
-    int16_t tiltx;
-    int16_t tilty;
-    int16_t tiltz;
-    int64_t time;
-    uint8_t light;
-    uint16_t keys;
-    int lagged;
-    int statemaxsize;
+	struct mCore* core;
+	struct GBA* gba; // anything that uses this will be deprecated eventually
+	color_t vbuff[VIDEO_HORIZONTAL_PIXELS * VIDEO_VERTICAL_PIXELS];
+	void* rom;
+	struct VFile* romvf;
+	char bios[16384];
+	struct VFile* biosvf;
+	struct VFile* sramvf;
+	struct mKeyCallback keysource;
+	struct mRotationSource rotsource;
+	struct mRTCSource rtcsource;
+	struct GBALuminanceSource lumasource;
+	int16_t tiltx;
+	int16_t tilty;
+	int16_t tiltz;
+	int64_t time;
+	uint8_t light;
+	uint16_t keys;
+	int lagged;
 } bizctx;
 
-static int32_t GetX(struct GBARotationSource* rotationSource)
+static int32_t GetX(struct mRotationSource* rotationSource)
 {
-    return container_of(rotationSource, bizctx, rotsource)->tiltx << 16;
+	return container_of(rotationSource, bizctx, rotsource)->tiltx << 16;
 }
-static int32_t GetY(struct GBARotationSource* rotationSource)
+static int32_t GetY(struct mRotationSource* rotationSource)
 {
-    return container_of(rotationSource, bizctx, rotsource)->tilty << 16;
+	return container_of(rotationSource, bizctx, rotsource)->tilty << 16;
 }
-static int32_t GetZ(struct GBARotationSource* rotationSource)
+static int32_t GetZ(struct mRotationSource* rotationSource)
 {
-    return container_of(rotationSource, bizctx, rotsource)->tiltz << 16;
+	return container_of(rotationSource, bizctx, rotsource)->tiltz << 16;
 }
 static uint8_t GetLight(struct GBALuminanceSource* luminanceSource)
 {
-    return container_of(luminanceSource, bizctx, lumasource)->light;
+	return container_of(luminanceSource, bizctx, lumasource)->light;
 }
-static time_t GetTime(struct GBARTCSource* rtcSource)
+static time_t GetTime(struct mRTCSource* rtcSource)
 {
-    return container_of(rtcSource, bizctx, rtcsource)->time;
+	return container_of(rtcSource, bizctx, rtcsource)->time;
 }
-static uint16_t GetKeys(struct GBAKeyCallback* keypadSource)
+static uint16_t GetKeys(struct mKeyCallback* keypadSource)
 {
-    bizctx *ctx = container_of(keypadSource, bizctx, keysource);
-    ctx->lagged = FALSE;
-    return ctx->keys;
+	bizctx *ctx = container_of(keypadSource, bizctx, keysource);
+	ctx->lagged = FALSE;
+	return ctx->keys;
 }
-static void RotationCB(struct GBARotationSource* rotationSource)
+static void RotationCB(struct mRotationSource* rotationSource)
 {
-    bizctx* ctx = container_of(rotationSource, bizctx, rotsource);
-    ctx->lagged = FALSE;
+	bizctx* ctx = container_of(rotationSource, bizctx, rotsource);
+	ctx->lagged = FALSE;
 }
 static void LightCB(struct GBALuminanceSource* luminanceSource)
 {
-    bizctx* ctx = container_of(luminanceSource, bizctx, lumasource);
-    ctx->lagged = FALSE;
+	bizctx* ctx = container_of(luminanceSource, bizctx, lumasource);
+	ctx->lagged = FALSE;
 }
-static void TimeCB(struct GBARTCSource* rtcSource)
+static void TimeCB(struct mRTCSource* rtcSource)
 {
-    // bizctx* ctx = container_of(rtcSource, bizctx, rtcsource);
-    // ctx->lagged = FALSE;
+	// bizctx* ctx = container_of(rtcSource, bizctx, rtcsource);
+	// ctx->lagged = FALSE;
 }
-static void logdebug(struct GBAThread* thread, enum GBALogLevel level, const char* format, va_list args)
+/*static void logdebug(struct GBAThread* thread, enum GBALogLevel level, const char* format, va_list args)
 {
 
-}
-
-static void ComputeStateSize(bizctx *ctx);
+}*/
 
 EXP void BizDestroy(bizctx* ctx)
 {
-    //these will be freed by GBADestroy
-    ctx->romvf = NULL;
-    ctx->biosvf = NULL;
-    free(ctx->rom);
-    ctx->rom = NULL;
-    ctx->sramvf->close(ctx->sramvf);
-
-    // TODO: this seems short.  is there anything else that needs to happen here?
-    GBADestroy(&ctx->gba);
-    free(ctx);
-}
-
-EXP bizctx* BizCreate(const void* bios)
-{
-    bizctx* ctx = calloc(1, sizeof(*ctx));
-    if (ctx)
-    {
-        memset(ctx->savedata, 0xff, sizeof(ctx->savedata));
-        GBACreate(&ctx->gba);
-        ARMSetComponents(&ctx->cpu, &ctx->gba.d, 0, NULL);
-        ARMInit(&ctx->cpu);
-        // TODO: configuration
-        ctx->gba.logLevel = 0;
-        ctx->gba.logHandler = logdebug;
-        // ctx->gba.stream = &ctx->stream;
-        ctx->gba.idleOptimization = IDLE_LOOP_IGNORE;
-        ctx->gba.realisticTiming = TRUE;
-        ctx->gba.rtcSource = &ctx->rtcsource;
-        ctx->gba.luminanceSource = &ctx->lumasource;
-        ctx->gba.rotationSource = &ctx->rotsource;
-        ctx->gba.keyCallback = &ctx->keysource;
-
-        GBAVideoSoftwareRendererCreate(&ctx->renderer);
-        ctx->renderer.outputBuffer = ctx->vbuff;
-        ctx->renderer.outputBufferStride = VIDEO_HORIZONTAL_PIXELS;
-        GBAVideoAssociateRenderer(&ctx->gba.video, &ctx->renderer.d);
-
-        GBAAudioResizeBuffer(&ctx->gba.audio, 1024);
-        blip_set_rates(ctx->gba.audio.left, GBA_ARM7TDMI_FREQUENCY, 44100);
-        blip_set_rates(ctx->gba.audio.right, GBA_ARM7TDMI_FREQUENCY, 44100);
-
-        if (bios)
-        {
-            memcpy(ctx->bios, bios, 16384);
-            ctx->biosvf = VFileFromMemory(ctx->bios, 16384);
-            if (!GBAIsBIOS(ctx->biosvf))
-            {
-                ctx->biosvf->close(ctx->biosvf);
-                GBADestroy(&ctx->gba);
-                free(ctx);
-                return NULL;
-            }
-            GBALoadBIOS(&ctx->gba, ctx->biosvf);
-        }
-
-        ctx->rotsource.sample = RotationCB;
-        ctx->rotsource.readTiltX = GetX;
-        ctx->rotsource.readTiltY = GetY;
-        ctx->rotsource.readGyroZ = GetZ;
-        ctx->lumasource.sample = LightCB;
-        ctx->lumasource.readLuminance = GetLight;
-        ctx->rtcsource.sample = TimeCB;
-        ctx->rtcsource.unixTime = GetTime;
-        ctx->keysource.readKeys = GetKeys;
-    }
-    return ctx;
-}
-
-EXP void BizReset(bizctx* ctx)
-{
-    ARMReset(&ctx->cpu);
-}
-
-EXP void BizSkipBios(bizctx* ctx)
-{
-    GBASkipBIOS(&ctx->gba);
+	ctx->core->deinit(ctx->core);
+	free(ctx->rom);
+	free(ctx);
 }
 
 typedef struct
@@ -187,127 +109,188 @@ typedef struct
 	uint32_t idleLoop;
 } overrideinfo;
 
-EXP int BizLoad(bizctx* ctx, const void* data, int length, const overrideinfo* dbinfo)
+EXP bizctx* BizCreate(const void* bios, const void* data, int length, const overrideinfo* dbinfo)
 {
-    ctx->rom = malloc(length);
-    if (!ctx->rom)
-        return 0;
+	bizctx* ctx = calloc(1, sizeof(*ctx));
+	if (!ctx)
+	{
+		return NULL;
+	}
+	//memset(ctx->savedata, 0xff, sizeof(ctx->savedata));
 
-    memcpy(ctx->rom, data, length);
-    ctx->romvf = VFileFromMemory(ctx->rom, length);
+	ctx->rom = malloc(length);
+	if (!ctx->rom)
+	{
+		free(ctx);
+		return NULL;
+	}
+	memcpy(ctx->rom, data, length);
+	ctx->romvf = VFileFromMemory(ctx->rom, length);
+	ctx->core = mCoreFindVF(ctx->romvf);
+	if (!ctx->core)
+	{
+		ctx->romvf->close(ctx->romvf);
+		free(ctx->rom);
+		free(ctx);
+		return NULL;
+	}
+	if (ctx->core->platform(ctx->core) != PLATFORM_GBA)
+	{
+		free(ctx->rom);
+		free(ctx);
+		return NULL;
+	}
+	mCoreInitConfig(ctx->core, NULL);
+	if (!ctx->core->init(ctx->core))
+	{
+		free(ctx->rom);
+		free(ctx);
+		return NULL;
+	}
+	ctx->gba = ctx->core->board;
 
-    if (!GBAIsROM(ctx->romvf))
-    {
-        ctx->romvf->close(ctx->romvf);
-        ctx->romvf = NULL;
-        free(ctx->rom);
-        ctx->rom = NULL;
-        return 0;
-    }
+	ctx->core->setVideoBuffer(ctx->core, ctx->vbuff, VIDEO_HORIZONTAL_PIXELS);
+	ctx->core->setAudioBufferSize(ctx->core, 1024);
 
-    ctx->sramvf = VFileFromMemory(ctx->savedata, sizeof(ctx->savedata));
+	blip_set_rates(ctx->core->getAudioChannel(ctx->core, 0), ctx->core->frequency(ctx->core), 44100);
+	blip_set_rates(ctx->core->getAudioChannel(ctx->core, 1), ctx->core->frequency(ctx->core), 44100);
 
-    GBALoadROM(&ctx->gba, ctx->romvf, ctx->sramvf, NULL);
+	ctx->core->loadROM(ctx->core, ctx->romvf);
+	//ctx->core->loadSave(ctx->core, save);
 
-    struct GBACartridgeOverride override;
-	const struct GBACartridge* cart = (const struct GBACartridge*) ctx->gba.memory.rom;
-	memcpy(override.id, &cart->id, sizeof(override.id));
+	ctx->core->setRTC(ctx->core, &ctx->rtcsource);
+	ctx->core->setRotation(ctx->core, &ctx->rotsource);
+
+	ctx->gba->luminanceSource = &ctx->lumasource; // ??
+	ctx->gba->idleOptimization = IDLE_LOOP_IGNORE; // ??
+	ctx->gba->realisticTiming = TRUE; // ??
+	ctx->gba->keyCallback = &ctx->keysource; // ??
+
+	ctx->keysource.readKeys = GetKeys;
+	ctx->rotsource.sample = RotationCB;
+	ctx->rotsource.readTiltX = GetX;
+	ctx->rotsource.readTiltY = GetY;
+	ctx->rotsource.readGyroZ = GetZ;
+	ctx->lumasource.sample = LightCB;
+	ctx->lumasource.readLuminance = GetLight;
+	ctx->rtcsource.sample = TimeCB;
+	ctx->rtcsource.unixTime = GetTime;
+
+	if (bios)
+	{
+		memcpy(ctx->bios, bios, 16384);
+		ctx->biosvf = VFileFromMemory(ctx->bios, 16384);
+		/*if (!GBAIsBIOS(ctx->biosvf))
+		{
+			ctx->biosvf->close(ctx->biosvf);
+			GBADestroy(&ctx->gba);
+			free(ctx);
+			return NULL;
+		}*/
+		ctx->core->loadBIOS(ctx->core, ctx->biosvf, 0);
+	}
+
 	if (dbinfo) // front end override
 	{
+		struct GBACartridgeOverride override;
+		const struct GBACartridge* cart = (const struct GBACartridge*) ctx->gba->memory.rom;
+		memcpy(override.id, &cart->id, sizeof(override.id));
 		override.savetype = dbinfo->savetype;
 		override.hardware = dbinfo->hardware;
 		override.idleLoop = dbinfo->idleLoop;
-		GBAOverrideApply(&ctx->gba, &override);
-	}
-	else if (GBAOverrideFind(NULL, &override)) // built in override
-    {
-		GBAOverrideApply(&ctx->gba, &override);
+		GBAOverrideApply(ctx->gba, &override);
 	}
 
-    BizReset(ctx);
-    ComputeStateSize(ctx);
-    return 1;
+	ctx->core->reset(ctx->core);
+	return ctx;
+}
+
+EXP void BizReset(bizctx* ctx)
+{
+	ctx->core->reset(ctx->core);
+}
+
+EXP void BizSkipBios(bizctx* ctx)
+{
+	GBASkipBIOS(ctx->gba);
 }
 
 static void blit(void* dst_, const void* src_)
 {
-    // swap R&B, set top (alpha) byte
-    const uint8_t* src = (const uint8_t*)src_;
-    uint8_t* dst = (uint8_t*)dst_;
+	// swap R&B, set top (alpha) byte
+	const uint8_t* src = (const uint8_t*)src_;
+	uint8_t* dst = (uint8_t*)dst_;
 
-    uint8_t* dst_end = dst + VIDEO_HORIZONTAL_PIXELS * VIDEO_VERTICAL_PIXELS * BYTES_PER_PIXEL;
+	uint8_t* dst_end = dst + VIDEO_HORIZONTAL_PIXELS * VIDEO_VERTICAL_PIXELS * BYTES_PER_PIXEL;
 
-    while (dst < dst_end)
-    {
-        dst[2] = src[0] | src[0] >> 5;
-        dst[1] = src[1] | src[1] >> 5;
-        dst[0] = src[2] | src[2] >> 5;
-        dst[3] = 0xff;
-        dst += 4;
-        src += 4;
-        dst[2] = src[0] | src[0] >> 5;
-        dst[1] = src[1] | src[1] >> 5;
-        dst[0] = src[2] | src[2] >> 5;
-        dst[3] = 0xff;
-        dst += 4;
-        src += 4;
-        dst[2] = src[0] | src[0] >> 5;
-        dst[1] = src[1] | src[1] >> 5;
-        dst[0] = src[2] | src[2] >> 5;
-        dst[3] = 0xff;
-        dst += 4;
-        src += 4;
-        dst[2] = src[0] | src[0] >> 5;
-        dst[1] = src[1] | src[1] >> 5;
-        dst[0] = src[2] | src[2] >> 5;
-        dst[3] = 0xff;
-        dst += 4;
-        src += 4;
-    }
+	while (dst < dst_end)
+	{
+		dst[2] = src[0] | src[0] >> 5;
+		dst[1] = src[1] | src[1] >> 5;
+		dst[0] = src[2] | src[2] >> 5;
+		dst[3] = 0xff;
+		dst += 4;
+		src += 4;
+		dst[2] = src[0] | src[0] >> 5;
+		dst[1] = src[1] | src[1] >> 5;
+		dst[0] = src[2] | src[2] >> 5;
+		dst[3] = 0xff;
+		dst += 4;
+		src += 4;
+		dst[2] = src[0] | src[0] >> 5;
+		dst[1] = src[1] | src[1] >> 5;
+		dst[0] = src[2] | src[2] >> 5;
+		dst[3] = 0xff;
+		dst += 4;
+		src += 4;
+		dst[2] = src[0] | src[0] >> 5;
+		dst[1] = src[1] | src[1] >> 5;
+		dst[0] = src[2] | src[2] >> 5;
+		dst[3] = 0xff;
+		dst += 4;
+		src += 4;
+	}
 }
 
 EXP int BizAdvance(bizctx* ctx, uint16_t keys, color_t* vbuff, int* nsamp, int16_t* sbuff,
-    int64_t time, int16_t gyrox, int16_t gyroy, int16_t gyroz, uint8_t luma)
+	int64_t time, int16_t gyrox, int16_t gyroy, int16_t gyroz, uint8_t luma)
 {
-    ctx->keys = keys;
-    ctx->light = luma;
-    ctx->time = time;
-    ctx->tiltx = gyrox;
-    ctx->tilty = gyroy;
-    ctx->tiltz = gyroz;
-    ctx->lagged = TRUE;
-    int frameCount = ctx->gba.video.frameCounter;
-    while (frameCount == ctx->gba.video.frameCounter)
-    {
-        ARMRunLoop(&ctx->cpu);
-    }
-    blit(vbuff, ctx->vbuff);
-    *nsamp = blip_samples_avail(ctx->gba.audio.left);
-    if (*nsamp > 1024)
-        *nsamp = 1024;
-    blip_read_samples(ctx->gba.audio.left, sbuff, 1024, TRUE);
-    blip_read_samples(ctx->gba.audio.right, sbuff + 1, 1024, TRUE);
-    return ctx->lagged;
+	ctx->keys = keys;
+	ctx->light = luma;
+	ctx->time = time;
+	ctx->tiltx = gyrox;
+	ctx->tilty = gyroy;
+	ctx->tiltz = gyroz;
+	ctx->lagged = TRUE;
+	ctx->core->runFrame(ctx->core);
+
+	blit(vbuff, ctx->vbuff);
+	*nsamp = blip_samples_avail(ctx->core->getAudioChannel(ctx->core, 0));
+	if (*nsamp > 1024)
+		*nsamp = 1024;
+	blip_read_samples(ctx->core->getAudioChannel(ctx->core, 0), sbuff, 1024, TRUE);
+	blip_read_samples(ctx->core->getAudioChannel(ctx->core, 1), sbuff + 1, 1024, TRUE);
+	return ctx->lagged;
 }
 
 struct MemoryAreas
 {
-    const void* bios;
-    const void* wram;
-    const void* iwram;
-    const void* mmio;
-    const void* palram;
-    const void* vram;
-    const void* oam;
-    const void* rom;
-    const void* sram;
-    uint32_t sram_size;
+	const void* bios;
+	const void* wram;
+	const void* iwram;
+	const void* mmio;
+	const void* palram;
+	const void* vram;
+	const void* oam;
+	const void* rom;
+	const void* sram;
+	uint32_t sram_size;
 };
 
 EXP int BizGetSaveRamSize(bizctx* ctx)
 {
-    switch (ctx->gba.memory.savedata.type)
-    {
+	switch (ctx->gba->memory.savedata.type)
+	{
 	case SAVEDATA_AUTODETECT:
 	case SAVEDATA_FLASH1M:
 		return SIZE_CART_FLASH1M;
@@ -318,74 +301,68 @@ EXP int BizGetSaveRamSize(bizctx* ctx)
 	case SAVEDATA_SRAM:
 		return SIZE_CART_SRAM;
 	case SAVEDATA_FORCE_NONE:
-    default:
+	default:
 		return 0;
 	}
 }
 
 EXP void BizGetMemoryAreas(bizctx* ctx, struct MemoryAreas* dst)
 {
-    dst->bios = ctx->gba.memory.bios;
-    dst->wram = ctx->gba.memory.wram;
-    dst->iwram = ctx->gba.memory.iwram;
-    dst->mmio = ctx->gba.memory.io;
-    dst->palram = ctx->gba.video.palette;
-    dst->vram = ctx->gba.video.renderer->vram;
-    dst->oam = ctx->gba.video.oam.raw;
-    dst->rom = ctx->gba.memory.rom;
-    dst->sram = ctx->savedata;
-    dst->sram_size = BizGetSaveRamSize(ctx);
+	dst->bios = ctx->gba->memory.bios;
+	dst->wram = ctx->gba->memory.wram;
+	dst->iwram = ctx->gba->memory.iwram;
+	dst->mmio = ctx->gba->memory.io;
+	dst->palram = ctx->gba->video.palette;
+	dst->vram = ctx->gba->video.renderer->vram;
+	dst->oam = ctx->gba->video.oam.raw;
+	dst->rom = ctx->gba->memory.rom;
+	dst->sram = ctx->gba->memory.savedata.data;
+	dst->sram_size = BizGetSaveRamSize(ctx);
 }
 
-EXP void BizGetSaveRam(bizctx* ctx, void* data)
+EXP int BizGetSaveRam(bizctx* ctx, void* data)
 {
-    memcpy(data, ctx->savedata, BizGetSaveRamSize(ctx));
+	void* tmp;
+	size_t size = ctx->core->savedataClone(ctx->core, &tmp);
+	memcpy(data, tmp, size);
+	free(tmp);
+	return size;
 }
 
-EXP void BizPutSaveRam(bizctx* ctx, const void* data)
+EXP int BizPutSaveRam(bizctx* ctx, const void* data, int size)
 {
-    memcpy(ctx->savedata, data, BizGetSaveRamSize(ctx));
+	return ctx->core->savedataLoad(ctx->core, data, size);
 }
 
-static void ComputeStateSize(bizctx *ctx)
-{
-    struct VFile *f = VFileMemChunk(NULL, 0);
-    GBASaveStateNamed(&ctx->gba, f, SAVESTATE_SAVEDATA);
-    ctx->statemaxsize = f->seek(f, 0, SEEK_CUR);
-    f->close(f);
-}
-
+// TODO: is this still true?
 // the size of a savestate will never get bigger than this post-load,
 // but it could get smaller if the game autodetects down to 8K/32K
 EXP int BizGetStateMaxSize(bizctx *ctx)
 {
-    return ctx->statemaxsize;
+	return ctx->core->stateSize(ctx->core);
 }
 
 EXP int BizGetState(bizctx* ctx, void* data, int size)
 {
-    struct VFile *f = VFileFromMemory(data, size);
-    if (!GBASaveStateNamed(&ctx->gba, f, SAVESTATE_SAVEDATA))
-        return -1;
-    int ret = f->seek(f, 0, SEEK_CUR);
-    f->close(f);
-    return ret;
+	if (size != ctx->core->stateSize(ctx->core))
+		return 0;
+	return ctx->core->saveState(ctx->core, data);
 }
 
 EXP int BizPutState(bizctx* ctx, const void* data, int size)
 {
-    struct VFile *f = VFileFromConstMemory(data, size);
-    int ret = GBALoadStateNamed(&ctx->gba, f, SAVESTATE_SAVEDATA);
-    f->close(f);
-    return ret;
+	if (size != ctx->core->stateSize(ctx->core))
+		return 0;
+	return ctx->core->loadState(ctx->core, data);
 }
 
 EXP void BizSetLayerMask(bizctx *ctx, int mask)
 {
-    struct GBAVideoRenderer *r = &ctx->renderer.d;
-    r->disableBG[0] = !(mask & 1);
-    r->disableBG[1] = !(mask & 2);
-    r->disableBG[2] = !(mask & 4);
-    r->disableBG[3] = !(mask & 8);
-    r->disableOBJ = !(mask & 16);
+	// TODO: Reactivate this
+	/*struct GBAVideoRenderer *r = &ctx->renderer.d;
+	r->disableBG[0] = !(mask & 1);
+	r->disableBG[1] = !(mask & 2);
+	r->disableBG[2] = !(mask & 4);
+	r->disableBG[3] = !(mask & 8);
+	r->disableOBJ = !(mask & 16);*/
 }
