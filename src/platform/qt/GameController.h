@@ -23,7 +23,7 @@ extern "C" {
 #include "gba/input.h"
 #include "gba/overrides.h"
 #ifdef BUILD_SDL
-#include "sdl-events.h"
+#include "platform/sdl/sdl-events.h"
 #endif
 }
 
@@ -72,7 +72,7 @@ public:
 	MultiplayerController* multiplayerController() { return m_multiplayer; }
 	void clearMultiplayerController();
 
-	void setOverride(Override* override) { m_override = override; }
+	void setOverride(Override* override);
 	Override* override() { return m_override; }
 	void clearOverride();
 

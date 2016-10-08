@@ -149,6 +149,7 @@ EXP bizctx* BizCreate(const void* bios, const void* data, int length, const over
 		return NULL;
 	}
 	ctx->gba = ctx->core->board;
+	ctx->sramvf = VFileMemChunk(0, 0);
 
 	ctx->core->setVideoBuffer(ctx->core, ctx->vbuff, VIDEO_HORIZONTAL_PIXELS);
 	ctx->core->setAudioBufferSize(ctx->core, 1024);
@@ -157,7 +158,6 @@ EXP bizctx* BizCreate(const void* bios, const void* data, int length, const over
 	blip_set_rates(ctx->core->getAudioChannel(ctx->core, 1), ctx->core->frequency(ctx->core), 44100);
 
 	ctx->core->loadROM(ctx->core, ctx->romvf);
-	//ctx->core->loadSave(ctx->core, save);
 
 	ctx->core->setRTC(ctx->core, &ctx->rtcsource);
 	ctx->core->setRotation(ctx->core, &ctx->rotsource);
@@ -307,18 +307,17 @@ EXP void BizGetMemoryAreas(bizctx* ctx, struct MemoryAreas* dst)
 	dst->sram_size = BizGetSaveRamSize(ctx);
 }
 
-EXP int BizGetSaveRam(bizctx* ctx, void* data)
+EXP int BizGetSaveRam(bizctx* ctx, void* data, int size)
 {
-	void* tmp;
-	size_t size = ctx->core->savedataClone(ctx->core, &tmp);
-	memcpy(data, tmp, size);
-	free(tmp);
-	return size;
+	ctx->sramvf->seek(ctx->sramvf, 0, SEEK_SET);
+	return ctx->sramvf->read(ctx->sramvf, data, size);
 }
 
 EXP int BizPutSaveRam(bizctx* ctx, const void* data, int size)
 {
-	return ctx->core->savedataLoad(ctx->core, data, size);
+	ctx->sramvf->seek(ctx->sramvf, 0, SEEK_SET);
+	ctx->sramvf->write(ctx->sramvf, data, size);
+	return ctx->core->loadSave(ctx->core, ctx->sramvf);
 }
 
 // TODO: is this still true?

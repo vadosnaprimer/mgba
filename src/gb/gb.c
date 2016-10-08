@@ -23,6 +23,7 @@ const uint32_t SGB_LR35902_FREQUENCY = 0x418B1E;
 
 const uint32_t GB_COMPONENT_MAGIC = 0x400000;
 
+#define DMG_BIOS_CHECKSUM 0xC2F5CC97
 #define DMG_2_BIOS_CHECKSUM 0x59C8598E
 #define CGB_BIOS_CHECKSUM 0x41884E46
 
@@ -101,6 +102,11 @@ bool GBLoadROM(struct GB* gb, struct VFile* vf) {
 	gb->memory.romSize = gb->pristineRomSize;
 	gb->romCrc32 = doCrc32(gb->memory.rom, gb->memory.romSize);
 
+	if (gb->cpu) {
+		struct LR35902Core* cpu = gb->cpu;
+		cpu->memory.setActiveRegion(cpu, cpu->pc);
+	}
+
 	// TODO: error check
 	return true;
 }
@@ -117,8 +123,7 @@ static void GBSramDeinit(struct GB* gb) {
 		if (gb->memory.mbcType == GB_MBC3_RTC) {
 			GBMBCRTCWrite(gb);
 		}
-		gb->sramVf->close(gb->sramVf);
-		gb->sramVf = 0;
+		gb->sramVf = NULL;
 	} else if (gb->memory.sram) {
 		mappedMemoryFree(gb->memory.sram, gb->sramSize);
 	}
@@ -209,9 +214,10 @@ void GBSramClean(struct GB* gb, uint32_t frameCount) {
 	}
 }
 
-void GBSavedataMask(struct GB* gb, struct VFile* vf) {
+void GBSavedataMask(struct GB* gb, struct VFile* vf, bool writeback) {
 	GBSramDeinit(gb);
 	gb->sramVf = vf;
+	gb->sramMaskWriteback = writeback;
 	gb->memory.sram = vf->map(vf, gb->sramSize, MAP_READ);
 }
 
@@ -219,21 +225,27 @@ void GBSavedataUnmask(struct GB* gb) {
 	if (gb->sramVf == gb->sramRealVf) {
 		return;
 	}
+	struct VFile* vf = gb->sramVf;
 	GBSramDeinit(gb);
 	gb->sramVf = gb->sramRealVf;
 	gb->memory.sram = gb->sramVf->map(gb->sramVf, gb->sramSize, MAP_WRITE);
+	if (gb->sramMaskWriteback) {
+		vf->read(vf, gb->memory.sram, gb->sramSize);
+	}
+	vf->close(vf);
 }
 
 void GBUnloadROM(struct GB* gb) {
 	// TODO: Share with GBAUnloadROM
-	if (gb->memory.rom && gb->memory.romBase != gb->memory.rom) {
-		free(gb->memory.romBase);
-	}
 	if (gb->memory.rom && gb->pristineRom != gb->memory.rom) {
 		if (gb->yankedRomSize) {
 			gb->yankedRomSize = 0;
 		}
 		mappedMemoryFree(gb->memory.rom, GB_SIZE_CART_MAX);
+		gb->memory.rom = gb->pristineRom;
+	}
+	if (gb->memory.rom && gb->memory.romBase != gb->memory.rom) {
+		free(gb->memory.romBase);
 	}
 	gb->memory.rom = 0;
 
@@ -242,11 +254,17 @@ void GBUnloadROM(struct GB* gb) {
 		gb->romVf->unmap(gb->romVf, gb->pristineRom, gb->pristineRomSize);
 #endif
 		gb->romVf->close(gb->romVf);
-		gb->pristineRom = 0;
 		gb->romVf = 0;
 	}
+	gb->pristineRom = 0;
 
+	GBSavedataUnmask(gb);
 	GBSramDeinit(gb);
+	if (gb->sramRealVf) {
+		gb->sramRealVf->close(gb->sramRealVf);
+	}
+	gb->sramRealVf = NULL;
+	gb->sramVf = NULL;
 }
 
 void GBLoadBIOS(struct GB* gb, struct VFile* vf) {
@@ -306,6 +324,7 @@ static uint32_t _GBBiosCRC32(struct VFile* vf) {
 
 bool GBIsBIOS(struct VFile* vf) {
 	switch (_GBBiosCRC32(vf)) {
+	case DMG_BIOS_CHECKSUM:
 	case DMG_2_BIOS_CHECKSUM:
 	case CGB_BIOS_CHECKSUM:
 		return true;
@@ -387,8 +406,8 @@ void GBReset(struct LR35902Core* cpu) {
 	GBMemoryReset(gb);
 	GBVideoReset(&gb->video);
 	GBTimerReset(&gb->timer);
-	GBIOReset(gb);
 	GBAudioReset(&gb->audio);
+	GBIOReset(gb);
 	GBSIOReset(&gb->sio);
 
 	GBSavedataUnmask(gb);
@@ -400,6 +419,7 @@ void GBDetectModel(struct GB* gb) {
 	}
 	if (gb->biosVf) {
 		switch (_GBBiosCRC32(gb->biosVf)) {
+		case DMG_BIOS_CHECKSUM:
 		case DMG_2_BIOS_CHECKSUM:
 			gb->model = GB_MODEL_DMG;
 			break;
@@ -524,6 +544,9 @@ void GBProcessEvents(struct LR35902Core* cpu) {
 
 		if (cpu->halted) {
 			cpu->cycles = cpu->nextEvent;
+			if (!gb->memory.ie || !gb->memory.ime) {
+				break;
+			}
 		}
 	} while (cpu->cycles >= cpu->nextEvent);
 }
@@ -553,6 +576,12 @@ void GBStop(struct LR35902Core* cpu) {
 	struct GB* gb = (struct GB*) cpu->master;
 	if (cpu->bus) {
 		mLOG(GB, GAME_ERROR, "Hit illegal stop at address %04X:%02X\n", cpu->pc, cpu->bus);
+	}
+	if (gb->memory.io[REG_KEY1] & 1) {
+		gb->doubleSpeed ^= 1;
+		gb->memory.io[REG_KEY1] = 0;
+		gb->memory.io[REG_KEY1] |= gb->doubleSpeed << 7;
+	} else if (cpu->bus) {
 		if (cpu->components && cpu->components[CPU_COMPONENT_DEBUGGER]) {
 			struct mDebuggerEntryInfo info = {
 				.address = cpu->pc - 1,
@@ -563,10 +592,6 @@ void GBStop(struct LR35902Core* cpu) {
 		// Hang forever
 		gb->memory.ime = 0;
 		cpu->pc -= 2;
-	} else if (gb->memory.io[REG_KEY1] & 1) {
-		gb->doubleSpeed ^= 1;
-		gb->memory.io[REG_KEY1] &= 1;
-		gb->memory.io[REG_KEY1] |= gb->doubleSpeed << 7;
 	}
 	// TODO: Actually stop
 }

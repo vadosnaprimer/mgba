@@ -177,7 +177,7 @@ static bool _GBCoreLoadSave(struct mCore* core, struct VFile* vf) {
 
 static bool _GBCoreLoadTemporarySave(struct mCore* core, struct VFile* vf) {
 	struct GB* gb = core->board;
-	GBSavedataMask(gb, vf);
+	GBSavedataMask(gb, vf, false);
 	return true; // TODO: Return a real value
 }
 
@@ -194,6 +194,14 @@ static bool _GBCoreLoadPatch(struct mCore* core, struct VFile* vf) {
 }
 
 static void _GBCoreUnloadROM(struct mCore* core) {
+	struct GBCore* gbcore = (struct GBCore*) core;
+	struct LR35902Core* cpu = core->cpu;
+	if (gbcore->cheatDevice) {
+		LR35902HotplugDetach(cpu, CPU_COMPONENT_CHEAT_DEVICE);
+		cpu->components[CPU_COMPONENT_CHEAT_DEVICE] = NULL;
+		mCheatDeviceDestroy(gbcore->cheatDevice);
+		gbcore->cheatDevice = NULL;
+	}
 	return GBUnloadROM(core->board);
 }
 
@@ -455,7 +463,9 @@ static void _GBCoreAttachDebugger(struct mCore* core, struct mDebugger* debugger
 
 static void _GBCoreDetachDebugger(struct mCore* core) {
 	struct LR35902Core* cpu = core->cpu;
-	LR35902HotplugDetach(cpu, CPU_COMPONENT_DEBUGGER);
+	if (core->debugger) {
+		LR35902HotplugDetach(cpu, CPU_COMPONENT_DEBUGGER);
+	}
 	cpu->components[CPU_COMPONENT_DEBUGGER] = NULL;
 	core->debugger = NULL;
 }
@@ -484,8 +494,13 @@ static size_t _GBCoreSavedataClone(struct mCore* core, void** sram) {
 	return gb->sramSize;
 }
 
-static bool _GBCoreSavedataLoad(struct mCore* core, const void* sram, size_t size) {
+static bool _GBCoreSavedataRestore(struct mCore* core, const void* sram, size_t size, bool writeback) {
 	struct GB* gb = core->board;
+	if (!writeback) {
+		struct VFile* vf = VFileMemChunk(sram, size);
+		GBSavedataMask(gb, vf, true);
+		return true;
+	}
 	struct VFile* vf = gb->sramVf;
 	if (vf) {
 		vf->seek(vf, 0, SEEK_SET);
@@ -563,6 +578,6 @@ struct mCore* GBCoreCreate(void) {
 	core->detachDebugger = _GBCoreDetachDebugger;
 	core->cheatDevice = _GBCoreCheatDevice;
 	core->savedataClone = _GBCoreSavedataClone;
-	core->savedataLoad = _GBCoreSavedataLoad;
+	core->savedataRestore = _GBCoreSavedataRestore;
 	return core;
 }
