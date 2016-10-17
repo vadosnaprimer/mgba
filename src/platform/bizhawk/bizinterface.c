@@ -50,6 +50,8 @@ typedef struct
 	uint8_t light;
 	uint16_t keys;
 	int lagged;
+	int didreset;
+	int skipbios;
 } bizctx;
 
 static int32_t GetX(struct mRotationSource* rotationSource)
@@ -112,14 +114,13 @@ typedef struct
 	uint32_t idleLoop;
 } overrideinfo;
 
-EXP bizctx* BizCreate(const void* bios, const void* data, int length, const overrideinfo* dbinfo)
+EXP bizctx* BizCreate(const void* bios, const void* data, int length, const overrideinfo* dbinfo, int skipbios)
 {
 	bizctx* ctx = calloc(1, sizeof(*ctx));
 	if (!ctx)
 	{
 		return NULL;
 	}
-	//memset(ctx->savedata, 0xff, sizeof(ctx->savedata));
 
 	ctx->rom = malloc(length);
 	if (!ctx->rom)
@@ -130,6 +131,7 @@ EXP bizctx* BizCreate(const void* bios, const void* data, int length, const over
 
 	ctx->logger.log = logdebug;
 	mLogSetDefaultLogger(&ctx->logger);
+	ctx->skipbios = skipbios;
 
 	memcpy(ctx->rom, data, length);
 	ctx->romvf = VFileFromMemory(ctx->rom, length);
@@ -202,18 +204,20 @@ EXP bizctx* BizCreate(const void* bios, const void* data, int length, const over
 		GBAOverrideApply(ctx->gba, &override);
 	}
 
-	ctx->core->reset(ctx->core);
 	return ctx;
+}
+
+static void resetinternal(bizctx* ctx)
+{
+	ctx->core->reset(ctx->core);
+	if (ctx->skipbios)
+		GBASkipBIOS(ctx->gba);
+	ctx->didreset = 1;
 }
 
 EXP void BizReset(bizctx* ctx)
 {
-	ctx->core->reset(ctx->core);
-}
-
-EXP void BizSkipBios(bizctx* ctx)
-{
-	GBASkipBIOS(ctx->gba);
+	resetinternal(ctx);
 }
 
 static void blit(void* dst_, const void* src_)
@@ -256,6 +260,11 @@ static void blit(void* dst_, const void* src_)
 EXP int BizAdvance(bizctx* ctx, uint16_t keys, color_t* vbuff, int* nsamp, int16_t* sbuff,
 	int64_t time, int16_t gyrox, int16_t gyroy, int16_t gyroz, uint8_t luma)
 {
+	if (!ctx->didreset)
+	{
+		resetinternal(ctx);
+	}
+
 	ctx->keys = keys;
 	ctx->light = luma;
 	ctx->time = time;
@@ -317,7 +326,9 @@ EXP int BizPutSaveRam(bizctx* ctx, const void* data, int size)
 {
 	ctx->sramvf->seek(ctx->sramvf, 0, SEEK_SET);
 	ctx->sramvf->write(ctx->sramvf, data, size);
-	return ctx->core->loadSave(ctx->core, ctx->sramvf);
+	bool ret = ctx->core->loadSave(ctx->core, ctx->sramvf);
+	resetinternal(ctx);
+	return ret;
 }
 
 // TODO: is this still true?
@@ -344,11 +355,10 @@ EXP int BizPutState(bizctx* ctx, const void* data, int size)
 
 EXP void BizSetLayerMask(bizctx *ctx, int mask)
 {
-	// TODO: Reactivate this
-	/*struct GBAVideoRenderer *r = &ctx->renderer.d;
+	struct GBAVideoRenderer *r = ctx->gba->video.renderer;
 	r->disableBG[0] = !(mask & 1);
 	r->disableBG[1] = !(mask & 2);
 	r->disableBG[2] = !(mask & 4);
 	r->disableBG[3] = !(mask & 8);
-	r->disableOBJ = !(mask & 16);*/
+	r->disableOBJ = !(mask & 16);
 }
