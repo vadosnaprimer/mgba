@@ -5,10 +5,9 @@
 #include "gba/core.h"
 #include "gba/gba.h"
 #include "gba/renderers/video-software.h"
-#include "gba/serialize.h"
 #include "gba/overrides.h"
-#include "gba/video.h"
 #include "util/vfs.h"
+#include "core/serialize.h"
 
 const char* const binaryName = "mgba";
 const uint32_t DEBUGGER_ID = 0xFEEDFACE;
@@ -331,26 +330,33 @@ EXP int BizPutSaveRam(bizctx* ctx, const void* data, int size)
 	return ret;
 }
 
-// TODO: is this still true?
-// the size of a savestate will never get bigger than this post-load,
-// but it could get smaller if the game autodetects down to 8K/32K
-EXP int BizGetStateMaxSize(bizctx *ctx)
+// state sizes can vary!
+EXP int BizStartGetState(bizctx* ctx, struct VFile** file, int* size)
 {
-	return ctx->core->stateSize(ctx->core);
+	struct VFile* vf = VFileMemChunk(NULL, 0);
+	if (!mCoreSaveStateNamed(ctx->core, vf, SAVESTATE_SAVEDATA))
+	{
+		vf->close(vf);
+		return 0;
+	}
+	*file = vf;
+	*size = vf->seek(vf, 0, SEEK_END);
+	return 1;
 }
 
-EXP int BizGetState(bizctx* ctx, void* data, int size)
+EXP void BizFinishGetState(struct VFile* file, void* data, int size)
 {
-	if (size != ctx->core->stateSize(ctx->core))
-		return 0;
-	return ctx->core->saveState(ctx->core, data);
+	file->seek(file, 0, SEEK_SET);
+	file->read(file, data, size);
+	file->close(file);
 }
 
 EXP int BizPutState(bizctx* ctx, const void* data, int size)
 {
-	if (size != ctx->core->stateSize(ctx->core))
-		return 0;
-	return ctx->core->loadState(ctx->core, data);
+	struct VFile* vf = VFileFromConstMemory(data, size);
+	int ret = mCoreLoadStateNamed(ctx->core, vf, SAVESTATE_SAVEDATA);
+	vf->close(vf);
+	return ret;
 }
 
 EXP void BizSetLayerMask(bizctx *ctx, int mask)
