@@ -333,6 +333,11 @@ EXP int BizPutSaveRam(bizctx* ctx, const void* data, int size)
 // state sizes can vary!
 EXP int BizStartGetState(bizctx* ctx, struct VFile** file, int* size)
 {
+	if (!ctx->didreset)
+	{
+		resetinternal(ctx);
+	}
+
 	struct VFile* vf = VFileMemChunk(NULL, 0);
 	if (!mCoreSaveStateNamed(ctx->core, vf, SAVESTATE_SAVEDATA))
 	{
@@ -353,6 +358,11 @@ EXP void BizFinishGetState(struct VFile* file, void* data, int size)
 
 EXP int BizPutState(bizctx* ctx, const void* data, int size)
 {
+	if (!ctx->didreset)
+	{
+		resetinternal(ctx);
+	}
+
 	struct VFile* vf = VFileFromConstMemory(data, size);
 	int ret = mCoreLoadStateNamed(ctx->core, vf, SAVESTATE_SAVEDATA);
 	vf->close(vf);
