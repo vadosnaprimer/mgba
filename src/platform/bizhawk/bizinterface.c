@@ -49,7 +49,6 @@ typedef struct
 	uint8_t light;
 	uint16_t keys;
 	int lagged;
-	int didreset;
 	int skipbios;
 } bizctx;
 
@@ -91,12 +90,20 @@ static void LightCB(struct GBALuminanceSource* luminanceSource)
 }
 static void TimeCB(struct mRTCSource* rtcSource)
 {
+	// no, reading the rtc registers should not unset the lagged flag
 	// bizctx* ctx = container_of(rtcSource, bizctx, rtcsource);
 	// ctx->lagged = FALSE;
 }
 static void logdebug(struct mLogger* logger, int category, enum mLogLevel level, const char* format, va_list args)
 {
 
+}
+
+static void resetinternal(bizctx* ctx)
+{
+	ctx->core->reset(ctx->core);
+	if (ctx->skipbios)
+		GBASkipBIOS(ctx->gba);
 }
 
 EXP void BizDestroy(bizctx* ctx)
@@ -150,7 +157,6 @@ EXP bizctx* BizCreate(const void* bios, const void* data, int length, const over
 		return NULL;
 	}
 	ctx->gba = ctx->core->board;
-	ctx->sramvf = VFileMemChunk(0, 0);
 
 	ctx->core->setVideoBuffer(ctx->core, ctx->vbuff, VIDEO_HORIZONTAL_PIXELS);
 	ctx->core->setAudioBufferSize(ctx->core, 1024);
@@ -159,6 +165,8 @@ EXP bizctx* BizCreate(const void* bios, const void* data, int length, const over
 	blip_set_rates(ctx->core->getAudioChannel(ctx->core, 1), ctx->core->frequency(ctx->core), 44100);
 
 	ctx->core->loadROM(ctx->core, ctx->romvf);
+	ctx->sramvf = VFileMemChunk(NULL, 131072);
+	ctx->core->loadSave(ctx->core, ctx->sramvf);
 
 	ctx->core->setRTC(ctx->core, &ctx->rtcsource);
 	ctx->core->setRotation(ctx->core, &ctx->rotsource);
@@ -203,15 +211,8 @@ EXP bizctx* BizCreate(const void* bios, const void* data, int length, const over
 		GBAOverrideApply(ctx->gba, &override);
 	}
 
+	resetinternal(ctx);
 	return ctx;
-}
-
-static void resetinternal(bizctx* ctx)
-{
-	ctx->core->reset(ctx->core);
-	if (ctx->skipbios)
-		GBASkipBIOS(ctx->gba);
-	ctx->didreset = 1;
 }
 
 EXP void BizReset(bizctx* ctx)
@@ -259,11 +260,6 @@ static void blit(void* dst_, const void* src_)
 EXP int BizAdvance(bizctx* ctx, uint16_t keys, color_t* vbuff, int* nsamp, int16_t* sbuff,
 	int64_t time, int16_t gyrox, int16_t gyroy, int16_t gyroz, uint8_t luma)
 {
-	if (!ctx->didreset)
-	{
-		resetinternal(ctx);
-	}
-
 	ctx->keys = keys;
 	ctx->light = luma;
 	ctx->time = time;
@@ -321,23 +317,15 @@ EXP int BizGetSaveRam(bizctx* ctx, void* data, int size)
 	return ctx->sramvf->read(ctx->sramvf, data, size);
 }
 
-EXP int BizPutSaveRam(bizctx* ctx, const void* data, int size)
+EXP void BizPutSaveRam(bizctx* ctx, const void* data, int size)
 {
 	ctx->sramvf->seek(ctx->sramvf, 0, SEEK_SET);
 	ctx->sramvf->write(ctx->sramvf, data, size);
-	bool ret = ctx->core->loadSave(ctx->core, ctx->sramvf);
-	resetinternal(ctx);
-	return ret;
 }
 
 // state sizes can vary!
 EXP int BizStartGetState(bizctx* ctx, struct VFile** file, int* size)
 {
-	if (!ctx->didreset)
-	{
-		resetinternal(ctx);
-	}
-
 	struct VFile* vf = VFileMemChunk(NULL, 0);
 	if (!mCoreSaveStateNamed(ctx->core, vf, SAVESTATE_SAVEDATA))
 	{
@@ -358,11 +346,6 @@ EXP void BizFinishGetState(struct VFile* file, void* data, int size)
 
 EXP int BizPutState(bizctx* ctx, const void* data, int size)
 {
-	if (!ctx->didreset)
-	{
-		resetinternal(ctx);
-	}
-
 	struct VFile* vf = VFileFromConstMemory(data, size);
 	int ret = mCoreLoadStateNamed(ctx->core, vf, SAVESTATE_SAVEDATA);
 	vf->close(vf);
