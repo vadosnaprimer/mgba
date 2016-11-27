@@ -361,3 +361,16 @@ EXP void BizSetLayerMask(bizctx *ctx, int mask)
 	r->disableBG[3] = !(mask & 8);
 	r->disableOBJ = !(mask & 16);
 }
+
+EXP void BizSetSoundMask(bizctx* ctx, int mask)
+{
+	struct GBAAudio *a = &ctx->gba->audio;
+	struct GBAudio *g = &a->psg;
+
+	g->forceDisableCh[0] = !(mask & 1);
+	g->forceDisableCh[0] = !(mask & 2);
+	g->forceDisableCh[0] = !(mask & 4);
+	g->forceDisableCh[0] = !(mask & 8);
+	a->forceDisableChA = !(mask & 16);
+	a->forceDisableChB = !(mask & 32);
+}
