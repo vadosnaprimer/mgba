@@ -37,6 +37,7 @@ typedef struct
 	struct VFile* romvf;
 	char bios[16384];
 	struct VFile* biosvf;
+	char sram[131072];
 	struct VFile* sramvf;
 	struct mKeyCallback keysource;
 	struct mRotationSource rotsource;
@@ -165,7 +166,7 @@ EXP bizctx* BizCreate(const void* bios, const void* data, int length, const over
 	blip_set_rates(ctx->core->getAudioChannel(ctx->core, 1), ctx->core->frequency(ctx->core), 44100);
 
 	ctx->core->loadROM(ctx->core, ctx->romvf);
-	ctx->sramvf = VFileMemChunk(NULL, 131072);
+	ctx->sramvf = VFileFromMemory(ctx->sram, 131072);
 	ctx->core->loadSave(ctx->core, ctx->sramvf);
 
 	ctx->core->setRTC(ctx->core, &ctx->rtcsource);
@@ -307,7 +308,7 @@ EXP void BizGetMemoryAreas(bizctx* ctx, struct MemoryAreas* dst)
 	dst->vram = ctx->gba->video.renderer->vram;
 	dst->oam = ctx->gba->video.oam.raw;
 	dst->rom = ctx->gba->memory.rom;
-	dst->sram = ctx->gba->memory.savedata.data;
+	dst->sram = ctx->sram; //gba->memory.savedata.data;
 	dst->sram_size = BizGetSaveRamSize(ctx);
 }
 
