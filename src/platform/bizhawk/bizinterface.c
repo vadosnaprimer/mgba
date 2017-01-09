@@ -369,9 +369,9 @@ EXP void BizSetSoundMask(bizctx* ctx, int mask)
 	struct GBAudio *g = &a->psg;
 
 	g->forceDisableCh[0] = !(mask & 1);
-	g->forceDisableCh[0] = !(mask & 2);
-	g->forceDisableCh[0] = !(mask & 4);
-	g->forceDisableCh[0] = !(mask & 8);
+	g->forceDisableCh[1] = !(mask & 2);
+	g->forceDisableCh[2] = !(mask & 4);
+	g->forceDisableCh[3] = !(mask & 8);
 	a->forceDisableChA = !(mask & 16);
 	a->forceDisableChB = !(mask & 32);
 }
