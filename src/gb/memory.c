@@ -18,7 +18,7 @@ mLOG_DEFINE_CATEGORY(GB_MEM, "GB Memory");
 static void _pristineCow(struct GB* gba);
 
 static uint8_t GBFastLoad8(struct LR35902Core* cpu, uint16_t address) {
-	if (UNLIKELY(address > cpu->memory.activeRegionEnd)) {
+	if (UNLIKELY(address >= cpu->memory.activeRegionEnd)) {
 		cpu->memory.setActiveRegion(cpu, address);
 		return cpu->memory.cpuLoad8(cpu, address);
 	}
@@ -437,7 +437,7 @@ void _GBMemoryHDMAService(struct GB* gb) {
 				gb->memory.isHdma = false;
 			}
 		} else {
-			gb->memory.io[REG_HDMA5] |= 0x80;
+			gb->memory.io[REG_HDMA5] = 0xFF;
 		}
 	}
 }

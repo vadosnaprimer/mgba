@@ -250,8 +250,8 @@ static const int _isRSpecialRegister[REG_MAX >> 1] = {
 	1, 1, 1, 1, 1, 1, 1, 1,
 	1, 1, 1, 1, 1, 1, 1, 1,
 	// Audio
-	0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 1, 0, 0, 0, 1, 0,
+	0, 0, 1, 0, 0, 0, 1, 0,
 	0, 0, 0, 0, 1, 0, 0, 0,
 	1, 1, 1, 1, 1, 1, 1, 1,
 	1, 1, 1, 1, 0, 0, 0, 0,
@@ -291,9 +291,9 @@ static const int _isWSpecialRegister[REG_MAX >> 1] = {
 	0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0,
 	// Audio
-	0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 1, 0, 0, 0, 0, 0,
+	1, 1, 1, 0, 1, 0, 1, 0,
+	1, 1, 1, 0, 1, 0, 1, 0,
+	1, 0, 1, 0, 0, 0, 0, 0,
 	1, 1, 1, 1, 1, 1, 1, 1,
 	1, 1, 1, 1, 0, 0, 0, 0,
 	// DMA
@@ -530,12 +530,14 @@ void GBAIOWrite(struct GBA* gba, uint32_t address, uint16_t value) {
 
 		// Interrupts and misc
 		case REG_WAITCNT:
+			value &= 0x5FFF;
 			GBAAdjustWaitstates(gba, value);
 			break;
 		case REG_IE:
 			GBAWriteIE(gba, value);
 			break;
 		case REG_IF:
+			gba->springIRQ &= ~value;
 			value = gba->memory.io[REG_IF >> 1] & ~value;
 			break;
 		case REG_IME:
@@ -564,6 +566,9 @@ void GBAIOWrite8(struct GBA* gba, uint32_t address, uint8_t value) {
 		} else {
 			GBAStop(gba);
 		}
+		return;
+	}
+	if (address > SIZE_IO) {
 		return;
 	}
 	uint16_t value16 = value << (8 * (address & 1));

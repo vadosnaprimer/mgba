@@ -68,9 +68,10 @@ static void GBInit(void* cpu, struct mCPUComponent* component) {
 
 	gb->model = GB_MODEL_AUTODETECT;
 
-	gb->biosVf = 0;
-	gb->romVf = 0;
-	gb->sramVf = 0;
+	gb->biosVf = NULL;
+	gb->romVf = NULL;
+	gb->sramVf = NULL;
+	gb->sramRealVf = NULL;
 
 	gb->pristineRom = 0;
 	gb->pristineRomSize = 0;
@@ -104,6 +105,7 @@ bool GBLoadROM(struct GB* gb, struct VFile* vf) {
 	gb->memory.romBase = gb->memory.rom;
 	gb->memory.romSize = gb->pristineRomSize;
 	gb->romCrc32 = doCrc32(gb->memory.rom, gb->memory.romSize);
+	GBMBCSwitchBank(&gb->memory, gb->memory.currentBank);
 
 	if (gb->cpu) {
 		struct LR35902Core* cpu = gb->cpu;
@@ -222,6 +224,7 @@ void GBSavedataMask(struct GB* gb, struct VFile* vf, bool writeback) {
 	gb->sramVf = vf;
 	gb->sramMaskWriteback = writeback;
 	gb->memory.sram = vf->map(vf, gb->sramSize, MAP_READ);
+	GBMBCSwitchSramBank(gb, gb->memory.sramCurrentBank);
 }
 
 void GBSavedataUnmask(struct GB* gb) {
@@ -282,11 +285,15 @@ void GBApplyPatch(struct GB* gb, struct Patch* patch) {
 	if (patchedSize > GB_SIZE_CART_MAX) {
 		patchedSize = GB_SIZE_CART_MAX;
 	}
+	void* oldRom = gb->memory.rom;
 	gb->memory.rom = anonymousMemoryMap(GB_SIZE_CART_MAX);
 	if (!patch->applyPatch(patch, gb->pristineRom, gb->pristineRomSize, gb->memory.rom, patchedSize)) {
 		mappedMemoryFree(gb->memory.rom, patchedSize);
 		gb->memory.rom = gb->pristineRom;
 		return;
+	}
+	if (gb->memory.romBase == oldRom) {
+		gb->memory.romBase = gb->memory.rom;
 	}
 	gb->memory.romSize = patchedSize;
 	gb->romCrc32 = doCrc32(gb->memory.rom, gb->memory.romSize);
