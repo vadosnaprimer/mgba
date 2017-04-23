@@ -375,3 +375,8 @@ EXP void BizSetSoundMask(bizctx* ctx, int mask)
 	a->forceDisableChA = !(mask & 16);
 	a->forceDisableChB = !(mask & 32);
 }
+
+EXP void BizGetRegisters(bizctx* ctx, int* dest)
+{
+	memcpy(dest, ctx->gba->cpu, 18 * sizeof(int));
+}
