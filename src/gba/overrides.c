@@ -42,11 +42,6 @@ static const struct GBACartridgeOverride _overrides[] = {
 	{ "ALFE", SAVEDATA_EEPROM, HW_NONE, IDLE_LOOP_NONE, false },
 	{ "ALFP", SAVEDATA_EEPROM, HW_NONE, IDLE_LOOP_NONE, false },
 
-	// Dragon Ball Z - The Legacy of Goku II
-	{ "ALFJ", SAVEDATA_EEPROM, HW_NONE, IDLE_LOOP_NONE },
-	{ "ALFE", SAVEDATA_EEPROM, HW_NONE, IDLE_LOOP_NONE },
-	{ "ALFP", SAVEDATA_EEPROM, HW_NONE, IDLE_LOOP_NONE },
-
 	// Dragon Ball Z - Taiketsu
 	{ "BDBE", SAVEDATA_EEPROM, HW_NONE, IDLE_LOOP_NONE, false },
 	{ "BDBP", SAVEDATA_EEPROM, HW_NONE, IDLE_LOOP_NONE, false },
@@ -174,9 +169,6 @@ static const struct GBACartridgeOverride _overrides[] = {
 
 	// Ueki no Housoku - Jingi Sakuretsu! Nouryokusha Battle
 	{ "BUHJ", SAVEDATA_EEPROM, HW_NONE, IDLE_LOOP_NONE, false },
-
-	// Ueki no Housoku - Jingi Sakuretsu! Nouryokusha Battle
-	{ "BUHJ", SAVEDATA_EEPROM, HW_NONE, IDLE_LOOP_NONE },
 
 	// Wario Ware Twisted
 	{ "RZWJ", SAVEDATA_SRAM, HW_RUMBLE | HW_GYRO, IDLE_LOOP_NONE, false },

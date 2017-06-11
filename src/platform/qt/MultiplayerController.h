@@ -21,9 +21,6 @@
 struct GBSIOLockstepNode;
 struct GBASIOLockstepNode;
 
-struct GBSIOLockstepNode;
-struct GBASIOLockstepNode;
-
 namespace QGBA {
 
 class GameController;
