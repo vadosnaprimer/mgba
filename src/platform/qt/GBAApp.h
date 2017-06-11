@@ -8,15 +8,14 @@
 
 #include <QApplication>
 #include <QFileDialog>
+#include <QThread>
 
 #include "ConfigController.h"
 #include "MultiplayerController.h"
 
 struct NoIntroDB;
 
-extern "C" {
-#include "core/log.h"
-}
+#include <mgba/core/log.h>
 
 mLOG_DECLARE_CATEGORY(QT);
 
@@ -25,11 +24,27 @@ namespace QGBA {
 class GameController;
 class Window;
 
+#ifdef USE_SQLITE3
+class GameDBParser : public QObject {
+Q_OBJECT
+
+public:
+	GameDBParser(NoIntroDB* db, QObject* parent = nullptr);
+
+public slots:
+	void parseNoIntroDB();
+
+private:
+	NoIntroDB* m_db;
+};
+#endif
+
 class GBAApp : public QApplication {
 Q_OBJECT
 
 public:
 	GBAApp(int& argc, char* argv[]);
+	~GBAApp();
 	static GBAApp* app();
 
 	static QString dataDir();
@@ -40,9 +55,6 @@ public:
 	QString getSaveFileName(QWidget* owner, const QString& title, const QString& filter = QString());
 	QString getOpenDirectoryName(QWidget* owner, const QString& title);
 
-	QFileDialog* getOpenFileDialog(QWidget* owner, const QString& title, const QString& filter = QString());
-	QFileDialog* getSaveFileDialog(QWidget* owner, const QString& title, const QString& filter = QString());
-
 	const NoIntroDB* gameDB() const { return m_db; }
 	bool reloadGameDB();
 
@@ -50,16 +62,6 @@ protected:
 	bool event(QEvent*);
 
 private:
-	class FileDialog : public QFileDialog {
-	public:
-		FileDialog(GBAApp* app, QWidget* parent = nullptr, const QString& caption = QString(),
-		           const QString& filter = QString());
-		virtual int exec() override;
-
-	private:
-		GBAApp* m_app;
-	};
-
 	Window* newWindowInternal();
 
 	void pauseAll(QList<Window*>* paused);
@@ -68,7 +70,11 @@ private:
 	ConfigController m_configController;
 	QList<Window*> m_windows;
 	MultiplayerController m_multiplayer;
-	NoIntroDB* m_db;
+
+	NoIntroDB* m_db = nullptr;
+#ifdef USE_SQLITE3
+	QThread m_parseThread;
+#endif
 };
 
 }

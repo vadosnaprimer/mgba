@@ -1,3 +1,4 @@
+file(GLOB TRANSLATION_FILES "${QM_BASE}/*.qm")
 file(WRITE ${TRANSLATION_QRC} "<RCC>\n\t<qresource prefix=\"/translations/\">\n")
 foreach(TS ${TRANSLATION_FILES})
 	get_filename_component(TS_BASE "${TS}" NAME)

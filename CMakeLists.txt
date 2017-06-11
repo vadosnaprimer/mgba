@@ -1,12 +1,13 @@
-cmake_minimum_required(VERSION 2.6)
-project(mGBA C)
+cmake_minimum_required(VERSION 2.8.11)
+project(mGBA)
 set(BINARY_NAME mgba CACHE INTERNAL "Name of output binaries")
 if(NOT MSVC)
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Wno-missing-field-initializers -std=c99")
 else()
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D_CRT_SECURE_NO_WARNINGS /wd4003 /wd4244 /wd4146")
 endif()
-set(USE_CLI_DEBUGGER ON CACHE BOOL "Whether or not to enable the CLI-mode ARM debugger")
+set(USE_DEBUGGERS ON CACHE BOOL "Whether or not to enable the debugging infrastructure")
+set(USE_EDITLINE ON CACHE BOOL "Whether or not to enable the CLI-mode debugger")
 set(USE_GDB_STUB ON CACHE BOOL "Whether or not to enable the GDB stub ARM debugger")
 set(USE_FFMPEG ON CACHE BOOL "Whether or not to enable FFmpeg support")
 set(USE_ZLIB ON CACHE BOOL "Whether or not to enable zlib support")
@@ -14,6 +15,7 @@ set(USE_MINIZIP ON CACHE BOOL "Whether or not to enable external minizip support
 set(USE_PNG ON CACHE BOOL "Whether or not to enable PNG support")
 set(USE_LIBZIP ON CACHE BOOL "Whether or not to enable LIBZIP support")
 set(USE_MAGICK ON CACHE BOOL "Whether or not to enable ImageMagick support")
+set(USE_SQLITE3 ON CACHE BOOL "Whether or not to enable SQLite3 support")
 set(M_CORE_GBA ON CACHE BOOL "Build Game Boy Advance core")
 set(M_CORE_GB ON CACHE BOOL "Build Game Boy core")
 set(USE_LZMA ON CACHE BOOL "Whether or not to enable 7-Zip support")
@@ -25,7 +27,9 @@ if(APPLE)
 endif()
 set(BUILD_PERF OFF CACHE BOOL "Build performance profiling tool")
 set(BUILD_TEST OFF CACHE BOOL "Build testing harness")
+set(BUILD_SUITE OFF CACHE BOOL "Build test suite")
 set(BUILD_EXAMPLE OFF CACHE BOOL "Build example frontends")
+set(BUILD_PYTHON OFF CACHE BOOL "Build Python bindings")
 set(BUILD_STATIC OFF CACHE BOOL "Build a static library")
 set(BUILD_SHARED ON CACHE BOOL "Build a shared library")
 set(SKIP_LIBRARY OFF CACHE BOOL "Skip building the library (useful for only building libretro or OpenEmu cores)")
@@ -34,28 +38,37 @@ set(BUILD_GLES2 OFF CACHE STRING "Build with OpenGL|ES 2")
 set(USE_EPOXY ON CACHE STRING "Build with libepoxy")
 set(DISABLE_DEPS OFF CACHE BOOL "Build without dependencies")
 file(GLOB ARM_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/arm/*.c)
+file(GLOB ARM_TEST_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/arm/test/*.c)
 file(GLOB LR35902_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/lr35902/*.c)
+file(GLOB LR35902_TEST_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/lr35902/test/*.c)
 file(GLOB GBA_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/gba/*.c)
+file(GLOB GBA_TEST_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/gba/test/*.c)
 file(GLOB GB_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/gb/*.c)
+file(GLOB GB_TEST_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/gb/test/*.c)
 file(GLOB GBA_CHEATS_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/gba/cheats/*.c)
 file(GLOB GBA_RR_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/gba/rr/*.c)
-file(GLOB GBA_EXTRA_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/gba/extra/*.c)
-file(GLOB UTIL_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/util/*.[cSs] ${CMAKE_CURRENT_SOURCE_DIR}/src/core/*.c)
+file(GLOB CORE_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/core/*.c)
+file(GLOB CORE_TEST_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/core/test/*.c)
+file(GLOB UTIL_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/util/*.[cSs])
+file(GLOB UTIL_TEST_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/util/test/*.c)
 file(GLOB GUI_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/util/gui/*.c ${CMAKE_CURRENT_SOURCE_DIR}/src/feature/gui/*.c)
 file(GLOB GBA_RENDERER_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/gba/renderers/*.c)
-file(GLOB SIO_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/gba/sio/lockstep.c)
+file(GLOB GBA_SIO_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/gba/sio/lockstep.c)
+file(GLOB GBA_EXTRA_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/gba/extra/*.c)
+file(GLOB GB_SIO_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/gb/sio/lockstep.c)
 file(GLOB GB_RENDERER_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/gb/renderers/*.c)
+file(GLOB GB_EXTRA_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/gb/extra/*.c)
 file(GLOB THIRD_PARTY_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/third-party/inih/*.c)
-set(CLI_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/feature/commandline.c)
-set(CORE_VFS_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/util/vfs/vfs-mem.c)
+file(GLOB EXTRA_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/feature/*.c)
+set(CORE_VFS_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/util/vfs/vfs-mem.c ${CMAKE_CURRENT_SOURCE_DIR}/src/util/vfs/vfs-fifo.c)
 set(VFS_SRC)
 source_group("ARM core" FILES ${ARM_SRC})
 source_group("LR35902 core" FILES ${LR35902_SRC})
-source_group("GBA board" FILES ${GBA_SRC} ${GBA_RENDERER_SRC} ${SIO_SRC})
-source_group("GBA extra" FILES ${GBA_CHEATS_SRC} ${GBA_EXTRA_SRC} ${GBA_RR_SRC})
-source_group("GB board" FILES ${GB_SRC})
+source_group("GBA board" FILES ${GBA_SRC} ${GBA_RENDERER_SRC} ${GBA_SIO_SRC})
+source_group("GBA extra" FILES ${GBA_CHEATS_SRC} ${GBA_RR_SRC})
+source_group("GB board" FILES ${GB_SRC} ${GB_SIO_SRC})
 source_group("Utilities" FILES ${UTIL_SRC})
-include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 if(NOT CMAKE_BUILD_TYPE)
 	set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type (e.g. Release or Debug)" FORCE)
@@ -142,11 +155,19 @@ add_custom_target(version-info ALL
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/version.cmake)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/src/core/version.c.in ${CMAKE_CURRENT_BINARY_DIR}/version.c)
+
 list(APPEND UTIL_SRC ${CMAKE_CURRENT_BINARY_DIR}/version.c)
 source_group("Generated sources" FILES ${CMAKE_CURRENT_BINARY_DIR}/version.c)
 
 # Advanced settings
-set(BUILD_LTO ON CACHE BOOL "Build with link-time optimization")
+if(NOT DEFINED 3DS)
+	# LTO appears to make 3DS binary slower
+	set(DEFAULT_LTO ON)
+else()
+	set(DEFAULT_LTO OFF)
+endif()
+
+set(BUILD_LTO ${DEFAULT_LTO} CACHE BOOL "Build with link-time optimization")
 set(BUILD_PGO OFF CACHE BOOL "Build with profiling-guided optimization")
 set(PGO_STAGE_2 CACHE BOOL "Rebuild for profiling-guided optimization after profiles have been generated")
 set(PGO_DIR "/tmp/gba-pgo/" CACHE PATH "Profiling-guided optimization profiles path")
@@ -174,8 +195,10 @@ if(WIN32)
 	source_group("Windows-specific code" FILES ${OS_SRC})
 	if(MSVC)
 		add_definitions(-DNOMINMAX -DWIN32_LEAN_AND_MEAN)
+		set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
 	endif()
 elseif(UNIX)
+	set(USE_PTHREADS ON)
 	add_definitions(-DUSE_PTHREADS)
 
 	if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
@@ -227,12 +250,26 @@ if(PSP2 OR WII)
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-format")
 endif()
 
-if(DEFINED 3DS OR DEFINED PSP2 OR DEFINED WII OR NOT M_CORE_GBA)
+if(DEFINED 3DS OR DEFINED PSP2 OR DEFINED WII)
+	set(USE_DEBUGGERS OFF)
+	set(USE_SQLITE3 OFF)
+endif()
+
+if(NOT M_CORE_GBA)
+	set(USE_GDB_STUB OFF)
+endif()
+
+if(NOT USE_DEBUGGERS)
+	set(USE_EDITLINE OFF)
 	set(USE_GDB_STUB OFF)
 endif()
 
 if(WII)
 	add_definitions(-U__STRICT_ANSI__)
+endif()
+
+if(DEFINED 3DS)
+	add_definitions(-D_GNU_SOURCE)
 endif()
 
 include(CheckFunctionExists)
@@ -252,11 +289,20 @@ if(NOT CMAKE_SYSTEM_NAME STREQUAL "Generic")
 	check_function_exists(uselocale HAVE_USELOCALE)
 	check_function_exists(setlocale HAVE_SETLOCALE)
 else()
+	if(DEFINED 3DS)
+		check_function_exists(snprintf_l HAVE_SNPRINTF_L)
+		check_function_exists(strtof_l HAVE_STRTOF_L)
+		check_function_exists(newlocale HAVE_NEWLOCALE)
+		check_function_exists(freelocale HAVE_FREELOCALE)
+		check_function_exists(uselocale HAVE_USELOCALE)
+		check_function_exists(setlocale HAVE_SETLOCALE)
+	endif()
 	if(NOT DEFINED 3DS AND NOT DEFINED PSP2 AND NOT DEFINED WII)
 		set(DISABLE_DEPS ON CACHE BOOL "This platform cannot build with dependencies" FORCE)
 	endif()
 	set(DISABLE_FRONTENDS ON)
 	set(MINIMAL_CORE ON)
+	set(ENABLE_EXTRA ON)
 endif()
 
 check_function_exists(chmod HAVE_CHMOD)
@@ -276,7 +322,7 @@ if(HAVE_LOCALTIME_R)
 	list(APPEND FUNCTION_DEFINES HAVE_LOCALTIME_R)
 endif()
 
-if(HAVE_NEWLOCALE AND HAVE_FREELOCALE AND HAVE_USELOCALE OR APPLE)
+if(HAVE_NEWLOCALE AND HAVE_FREELOCALE AND HAVE_USELOCALE OR APPLE OR DEFINED 3DS)
 	list(APPEND FUNCTION_DEFINES HAVE_LOCALE)
 	if (HAVE_STRTOF_L)
 		list(APPEND FUNCTION_DEFINES HAVE_STRTOF_L)
@@ -307,7 +353,7 @@ if(CMAKE_SYSTEM_NAME MATCHES .*BSD)
 		list(APPEND LIBEDIT_LIBRARIES -ltermcap)
 	endif()
 else()
-	find_feature(USE_CLI_DEBUGGER "libedit")
+	find_feature(USE_EDITLINE "libedit")
 endif()
 if(BUILD_GL)
 	find_package(OpenGL QUIET)
@@ -331,6 +377,8 @@ endif()
 set(WANT_ZLIB ${USE_ZLIB})
 set(WANT_PNG ${USE_PNG})
 set(WANT_LIBZIP ${USE_LIBZIP})
+set(WANT_SQLITE3 ${USE_SQLITE3})
+set(USE_CMOCKA ${BUILD_SUITE})
 
 find_feature(USE_FFMPEG "libavcodec;libavformat;libavresample;libavutil;libswscale")
 find_feature(USE_ZLIB "ZLIB")
@@ -339,9 +387,16 @@ find_feature(USE_PNG "PNG")
 find_feature(USE_LIBZIP "libzip")
 find_feature(USE_MAGICK "MagickWand")
 find_feature(USE_EPOXY "epoxy")
+find_feature(USE_CMOCKA "cmocka")
+find_feature(USE_SQLITE3 "sqlite3")
 
 # Features
-set(DEBUGGER_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/debugger/debugger.c)
+set(DEBUGGER_SRC
+	${CMAKE_CURRENT_SOURCE_DIR}/src/debugger/debugger.c
+	${CMAKE_CURRENT_SOURCE_DIR}/src/debugger/parser.c
+	${CMAKE_CURRENT_SOURCE_DIR}/src/debugger/symbols.c
+	${CMAKE_CURRENT_SOURCE_DIR}/src/debugger/cli-debugger.c)
+
 set(FEATURE_SRC)
 set(CPACK_DEBIAN_PACKAGE_DEPENDS "libc6")
 
@@ -349,21 +404,13 @@ if(DISABLE_DEPS)
 	set(USE_GDB_STUB OFF)
 endif()
 
-if(USE_CLI_DEBUGGER)
-	list(APPEND FEATURES CLI_DEBUGGER)
-	list(APPEND FEATURE_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/debugger/cli-debugger.c)
-	list(APPEND FEATURE_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/debugger/parser.c)
-	if(M_CORE_GBA)
-		list(APPEND FEATURE_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/arm/debugger/cli-debugger.c)
-		list(APPEND FEATURE_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/gba/extra/cli.c)
-	endif()
-	if(M_CORE_GB)
-		list(APPEND FEATURE_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/lr35902/debugger/cli-debugger.c)
-	endif()
+if(USE_EDITLINE)
+	list(APPEND FEATURES EDITLINE)
 	include_directories(AFTER ${LIBEDIT_INCLUDE_DIRS})
 	link_directories(${LIBEDIT_LIBRARY_DIRS})
 	set(DEBUGGER_LIB ${LIBEDIT_LIBRARIES})
 	set(CPACK_DEBIAN_PACKAGE_DEPENDS "${CPACK_DEBIAN_PACKAGE_DEPENDS},libedit2")
+	list(APPEND FEATURE_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/feature/editline/cli-el-backend.c")
 else()
 	set(DEBUGGER_LIB "")
 endif()
@@ -463,6 +510,12 @@ if(USE_PNG)
 	set(CPACK_DEBIAN_PACKAGE_DEPENDS "${CPACK_DEBIAN_PACKAGE_DEPENDS},libpng12-0")
 endif()
 
+if(WANT_SQLITE3 AND NOT USE_SQLITE3)
+	list(APPEND FEATURE_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/third-party/sqlite3/sqlite3.c)
+	include_directories(AFTER ${CMAKE_CURRENT_SOURCE_DIR}/src/third-party/sqlite3/)
+	set(USE_SQLITE3 ON)
+endif()
+
 if(USE_LIBZIP)
 	include_directories(AFTER ${LIBZIP_INCLUDE_DIRS})
 	link_directories(${LIBZIP_LIBRARY_DIRS})
@@ -488,10 +541,12 @@ elseif(USE_ZLIB)
 	list(APPEND VFS_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/util/vfs/vfs-zip.c
 		${CMAKE_CURRENT_SOURCE_DIR}/src/third-party/zlib/contrib/minizip/ioapi.c
 		${CMAKE_CURRENT_SOURCE_DIR}/src/third-party/zlib/contrib/minizip/unzip.c)
-	set_source_files_properties(
-		${CMAKE_CURRENT_SOURCE_DIR}/src/third-party/zlib/contrib/minizip/ioapi.c
-		${CMAKE_CURRENT_SOURCE_DIR}/src/third-party/zlib/contrib/minizip/unzip.c
-		PROPERTIES COMPILE_FLAGS "-Wno-unused-parameter -Wno-implicit-function-declaration")
+	if(NOT MSVC)
+		set_source_files_properties(
+			${CMAKE_CURRENT_SOURCE_DIR}/src/third-party/zlib/contrib/minizip/ioapi.c
+			${CMAKE_CURRENT_SOURCE_DIR}/src/third-party/zlib/contrib/minizip/unzip.c
+			PROPERTIES COMPILE_FLAGS "-Wno-unused-parameter -Wno-implicit-function-declaration")
+	endif()
 endif()
 
 if (USE_LZMA)
@@ -530,49 +585,75 @@ if(USE_EPOXY)
 	set(CPACK_DEBIAN_PACKAGE_DEPENDS "${CPACK_DEBIAN_PACKAGE_DEPENDS},libepoxy0")
 endif()
 
+if(USE_SQLITE3)
+	list(APPEND FEATURES SQLITE3)
+	include_directories(AFTER ${SQLITE3_INCLUDE_DIRS})
+	list(APPEND DEPENDENCY_LIB ${SQLITE3_LIBRARIES})
+	set(CPACK_DEBIAN_PACKAGE_DEPENDS "${CPACK_DEBIAN_PACKAGE_DEPENDS},libsqlite3-0")
+	list(APPEND FEATURE_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/feature/sqlite3/no-intro.c")
+endif()
 
-foreach(FEATURE IN LISTS FEATURES)
-	list(APPEND FEATURE_DEFINES "USE_${FEATURE}")
-endforeach()
-
-set(CORE_SRC)
+set(TEST_SRC ${CORE_TEST_SRC})
 if(M_CORE_GB)
 	add_definitions(-DM_CORE_GB)
 	list(APPEND CORE_SRC
 		${LR35902_SRC}
-		${CMAKE_CURRENT_SOURCE_DIR}/src/lr35902/debugger/debugger.c
 		${GB_SRC}
 		${GB_RENDERER_SRC})
+	list(APPEND DEBUGGER_SRC
+		${CMAKE_CURRENT_SOURCE_DIR}/src/lr35902/debugger/cli-debugger.c
+		${CMAKE_CURRENT_SOURCE_DIR}/src/lr35902/debugger/debugger.c
+		${CMAKE_CURRENT_SOURCE_DIR}/src/lr35902/debugger/memory-debugger.c
+		${CMAKE_CURRENT_SOURCE_DIR}/src/gb/debugger/cli.c
+		${CMAKE_CURRENT_SOURCE_DIR}/src/gb/debugger/symbols.c)
+	list(APPEND TEST_SRC
+		${LR35902_TEST_SRC}
+		${GB_TEST_SRC})
 endif()
 
 if(M_CORE_GBA)
 	add_definitions(-DM_CORE_GBA)
-	list(APPEND CORE_SRC 
+	list(APPEND CORE_SRC
 		${ARM_SRC}
-		${CMAKE_CURRENT_SOURCE_DIR}/src/arm/debugger/debugger.c
-		${CMAKE_CURRENT_SOURCE_DIR}/src/arm/debugger/memory-debugger.c
 		${GBA_SRC}
 		${GBA_CHEATS_SRC}
 		${GBA_RENDERER_SRC})
+	list(APPEND DEBUGGER_SRC
+		${CMAKE_CURRENT_SOURCE_DIR}/src/arm/debugger/cli-debugger.c
+		${CMAKE_CURRENT_SOURCE_DIR}/src/arm/debugger/debugger.c
+		${CMAKE_CURRENT_SOURCE_DIR}/src/arm/debugger/memory-debugger.c
+		${CMAKE_CURRENT_SOURCE_DIR}/src/gba/debugger/cli.c)
+	list(APPEND TEST_SRC
+		${ARM_TEST_SRC}
+		${GBA_TEST_SRC})
 	if(NOT M_CORE_GB)
 		list(APPEND CORE_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/gb/audio.c)
 	endif()
 endif()
+
+if(USE_DEBUGGERS)
+	list(APPEND FEATURE_SRC ${DEBUGGER_SRC})
+	list(APPEND FEATURES DEBUGGERS)
+endif()
+
+foreach(FEATURE IN LISTS FEATURES)
+	list(APPEND FEATURE_DEFINES "USE_${FEATURE}")
+endforeach()
 
 source_group("Virtual files" FILES ${CORE_VFS_SRC} ${VFS_SRC})
 source_group("Extra features" FILES ${FEATURE_SRC})
 source_group("Third-party code" FILES ${THIRD_PARTY_SRC})
 
 # Platform binaries
-if(3DS)
+if(DEFINED 3DS)
 	add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/platform/3ds ${CMAKE_CURRENT_BINARY_DIR}/3ds)
 endif()
 
-if(WII)
+if(DEFINED WII)
 	add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/platform/wii ${CMAKE_CURRENT_BINARY_DIR}/wii)
 endif()
 
-if(PSP2)
+if(DEFINED PSP2)
 	add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/platform/psp2 ${CMAKE_CURRENT_BINARY_DIR}/psp2)
 endif()
 
@@ -580,21 +661,37 @@ endif()
 list(APPEND CORE_SRC
 	${UTIL_SRC}
 	${CORE_VFS_SRC}
-	${DEBUGGER_SRC}
 	${OS_SRC}
 	${THIRD_PARTY_SRC})
+list(APPEND TEST_SRC ${UTIL_TEST_SRC})
 
 set(SRC ${CORE_SRC} ${VFS_SRC})
 if(NOT MINIMAL_CORE)
+	set(ENABLE_EXTRA ON)
+	if(M_CORE_GBA)
+		list(APPEND SRC
+			${GBA_SIO_SRC})
+	endif()
+	if(M_CORE_GB)
+		list(APPEND SRC
+			${GB_SIO_SRC})
+	endif()
+	list(APPEND SRC
+		${FEATURE_SRC})
+endif()
+
+if(ENABLE_EXTRA)
 	if(M_CORE_GBA)
 		list(APPEND SRC
 			${GBA_RR_SRC}
-			${GBA_EXTRA_SRC}
-			${SIO_SRC})
+			${GBA_EXTRA_SRC})
+	endif()
+	if(M_CORE_GB)
+		list(APPEND SRC
+			${GB_EXTRA_SRC})
 	endif()
 	list(APPEND SRC
-		${FEATURE_SRC}
-		${CLI_SRC})
+		${EXTRA_SRC})
 endif()
 
 if(NOT SKIP_LIBRARY)
@@ -638,6 +735,7 @@ else()
 		set(DISABLE_FRONTENDS ON)
 		set(BUILD_PERF OFF)
 		set(BUILD_TEST OFF)
+		set(BUILD_SUITE OFF)
 	endif()
 endif()
 
@@ -678,8 +776,11 @@ if(BUILD_OPENEMU)
 endif()
 
 if(BUILD_SDL)
-	add_definitions(-DBUILD_SDL)
 	add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/platform/sdl ${CMAKE_CURRENT_BINARY_DIR}/sdl)
+	# The SDL platform CMakeLists could decide to disable SDL, so check again before adding the define.
+	if(BUILD_SDL)
+		add_definitions(-DBUILD_SDL)
+	endif()
 endif()
 
 if(BUILD_QT)
@@ -687,7 +788,7 @@ if(BUILD_QT)
 endif()
 
 if(BUILD_PERF)
-	set(PERF_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/platform/test/perf-main.c ${CLI_SRC})
+	set(PERF_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/platform/test/perf-main.c)
 	if(UNIX AND NOT APPLE)
 		list(APPEND PERF_LIB rt)
 	endif()
@@ -703,7 +804,29 @@ if(BUILD_TEST)
 	add_executable(${BINARY_NAME}-fuzz ${CMAKE_CURRENT_SOURCE_DIR}/src/platform/test/fuzz-main.c)
 	target_link_libraries(${BINARY_NAME}-fuzz ${BINARY_NAME})
 	set_target_properties(${BINARY_NAME}-fuzz PROPERTIES COMPILE_DEFINITIONS "${OS_DEFINES};${FEATURE_DEFINES};${FUNCTION_DEFINES}")
-	install(TARGETS ${BINARY_NAME}-fuzz DESTINATION bin COMPONENT ${BINARY_NAME}-test)
+	add_executable(tbl-fuzz ${CMAKE_CURRENT_SOURCE_DIR}/src/platform/test/tbl-fuzz-main.c)
+	target_link_libraries(tbl-fuzz ${BINARY_NAME})
+	set_target_properties(tbl-fuzz PROPERTIES COMPILE_DEFINITIONS "${OS_DEFINES};${FEATURE_DEFINES};${FUNCTION_DEFINES}")
+	install(TARGETS ${BINARY_NAME}-fuzz tbl-fuzz DESTINATION bin COMPONENT ${BINARY_NAME}-test)
+endif()
+
+if(NOT USE_CMOCKA)
+	set(BUILD_SUITE OFF)
+endif()
+if(BUILD_SUITE)
+	enable_testing()
+	include_directories(AFTER ${CMOCKA_INCLUDE_DIRS})
+	link_directories(${CMOCKA_LIBRARY_DIRS})
+
+	add_executable(${BINARY_NAME}-suite ${CMAKE_CURRENT_SOURCE_DIR}/src/platform/test/suite-main.c ${TEST_SRC})
+	target_link_libraries(${BINARY_NAME}-suite ${BINARY_NAME} ${PLATFORM_LIBRARY} cmocka)
+	set_target_properties(${BINARY_NAME}-suite PROPERTIES COMPILE_DEFINITIONS "${OS_DEFINES};${FEATURE_DEFINES};${FUNCTION_DEFINES}")
+	add_test(${BINARY_NAME}-suite ${BINARY_NAME}-suite)
+endif()
+
+if(BUILD_PYTHON)
+	enable_testing()
+	add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/platform/python ${CMAKE_CURRENT_BINARY_DIR}/python)
 endif()
 
 if(BUILD_EXAMPLE)
@@ -716,9 +839,13 @@ if(BUILD_EXAMPLE)
 		target_link_libraries(${BINARY_NAME}-example-client ${BINARY_NAME} ${SDL_LIBRARY} ${SDLMAIN_LIBRARY} ${OPENGL_LIBRARY} ${OPENGLES2_LIBRARY})
 		set_target_properties(${BINARY_NAME}-example-client PROPERTIES
 		                      COMPILE_DEFINITIONS "${OS_DEFINES};${FEATURE_DEFINES};${FUNCTION_DEFINES}"
-		                      INCLUDE_DIRECTORIES "${SDL_INCLUDE_DIR};${CMAKE_CURRENT_SOURCE_DIR}/src")
+		                      INCLUDE_DIRECTORIES "${SDL_INCLUDE_DIR};${CMAKE_CURRENT_SOURCE_DIR}/src;${CMAKE_CURRENT_SOURCE_DIR}/include")
 	endif()
 endif()
+
+message(STATUS ${USE_PTHREADS})
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/src/core/flags.h.in ${CMAKE_CURRENT_BINARY_DIR}/flags.h)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/flags.h DESTINATION include/mgba COMPONENT lib${BINARY_NAME})
 
 # Packaging
 set(CPACK_PACKAGE_VERSION ${VERSION_STRING})
@@ -774,19 +901,23 @@ if(NOT QUIET)
 	message(STATUS "	Game Boy Advance: ${M_CORE_GBA}")
 	message(STATUS "	Game Boy: ${M_CORE_GB}")
 	message(STATUS "Features:")
-	message(STATUS "	CLI debugger: ${USE_CLI_DEBUGGER}")
+	message(STATUS "	Debuggers: ${USE_DEBUGGERS}")
+	message(STATUS "	CLI debugger: ${USE_EDITLINE}")
 	message(STATUS "	GDB stub: ${USE_GDB_STUB}")
 	message(STATUS "	Video recording: ${USE_FFMPEG}")
 	message(STATUS "	GIF recording: ${USE_MAGICK}")
 	message(STATUS "	Screenshot/advanced savestate support: ${USE_PNG}")
 	message(STATUS "	ZIP support: ${SUMMARY_ZIP}")
 	message(STATUS "	7-Zip support: ${USE_LZMA}")
+	message(STATUS "	SQLite3 game database: ${USE_SQLITE3}")
 	message(STATUS "	OpenGL support: ${SUMMARY_GL}")
 	message(STATUS "Frontends:")
 	message(STATUS "	Qt: ${BUILD_QT}")
 	message(STATUS "	SDL (${SDL_VERSION}): ${BUILD_SDL}")
 	message(STATUS "	Profiling: ${BUILD_PERF}")
 	message(STATUS "	Test harness: ${BUILD_TEST}")
+	message(STATUS "	Test suite: ${BUILD_SUITE}")
+	message(STATUS "	Python bindings: ${BUILD_PYTHON}")
 	message(STATUS "	Examples: ${BUILD_EXAMPLE}")
 	message(STATUS "Cores:")
 	message(STATUS "	Libretro core: ${BUILD_LIBRETRO}")
