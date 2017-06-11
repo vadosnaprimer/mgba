@@ -1,13 +1,18 @@
 #include <stdlib.h>
-#include "core/core.h"
-#include "core/log.h"
-#include "util/common.h"
-#include "gba/core.h"
-#include "gba/gba.h"
-#include "gba/renderers/video-software.h"
-#include "gba/overrides.h"
-#include "util/vfs.h"
-#include "core/serialize.h"
+#include <stdint.h>
+#include "mgba/core/core.h"
+#include "mgba/core/log.h"
+#include "mgba-util/common.h"
+#include "mgba/gba/core.h"
+#include "mgba/gba/interface.h"
+#include "mgba/internal/gba/gba.h"
+#include "mgba/internal/gba/video.h"
+#include "mgba/internal/gba/audio.h"
+#include "mgba/internal/debugger/debugger.h"
+#include "mgba/internal/gba/overrides.h"
+#include "mgba-util/vfs.h"
+#include "mgba/core/serialize.h"
+#include "mgba/core/blip_buf.h"
 
 const char* const binaryName = "mgba";
 const uint32_t DEBUGGER_ID = 0xFEEDFACE;
@@ -169,8 +174,8 @@ EXP bizctx* BizCreate(const void* bios, const void* data, int length, const over
 	ctx->sramvf = VFileFromMemory(ctx->sram, 131072);
 	ctx->core->loadSave(ctx->core, ctx->sramvf);
 
-	ctx->core->setRTC(ctx->core, &ctx->rtcsource);
-	ctx->core->setRotation(ctx->core, &ctx->rotsource);
+	mCoreSetRTC(ctx->core, &ctx->rtcsource);
+	ctx->gba->rotationSource = &ctx->rotsource;
 
 	ctx->gba->luminanceSource = &ctx->lumasource; // ??
 	ctx->gba->idleOptimization = IDLE_LOOP_IGNORE; // ??

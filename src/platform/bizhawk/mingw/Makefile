@@ -11,9 +11,19 @@ else
 	$(error Unknown arch)
 endif
 
+MAKEFILE_DIR:=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
+ROOT_DIR:=$(MAKEFILE_DIR)/../../..
+OBJ_DIR:=$(MAKEFILE_DIR)/obj
+
 #-I../../../arm 
 # -s -O3 -fomit-frame-pointer -fexpensive-optimizations -flto
-CXXFLAGS = -s -O3 -fomit-frame-pointer -fexpensive-optimizations -flto -I../../.. -Wall -std=gnu99 -fgnu89-inline -DRESAMPLE_LIBRARY=RESAMPLE_BLIP_BUF -DHAVE_LOCALTIME_R -DMINIMAL_CORE=2 -DDISABLE_THREADING -DM_CORE_GBA
+CXXFLAGS = \
+	-s -O3 -fomit-frame-pointer \
+	-fexpensive-optimizations -flto \
+	-I../../../../include -Wall -std=gnu99 -fgnu89-inline \
+	-I../../.. \
+	-DRESAMPLE_LIBRARY=RESAMPLE_BLIP_BUF -DHAVE_LOCALTIME_R \
+	-DMINIMAL_CORE=2 -DDISABLE_THREADING -DM_CORE_GBA
 
 TARGET = mgba.dll
 
@@ -25,83 +35,93 @@ DEST_32 = ../../../../../output/dll
 DEST_64 = ../../../../../output64/dll
 
 SRCS = \
-	../../../core/config.c \
-	../../../core/cheats.c \
-	../../../core/core.c \
-	../../../core/directories.c \
-	../../../core/input.c \
-	../../../core/interface.c \
-	../../../core/library.c \
-	../../../core/log.c \
-	../../../core/rewind.c \
-	../../../core/serialize.c \
-	../../../core/sync.c \
-	../../../core/thread.c \
-	../../../arm/debugger/debugger.c \
-	../../../arm/debugger/memory-debugger.c \
-	../../../arm/arm.c \
-	../../../arm/decoder-arm.c \
-	../../../arm/decoder-thumb.c \
-	../../../arm/decoder.c \
-	../../../arm/isa-arm.c \
-	../../../arm/isa-thumb.c \
-	../../../gba/audio.c \
-	../../../gba/bios.c \
-	../../../gba/cheats.c \
-	../../../gba/cheats/codebreaker.c \
-	../../../gba/cheats/gameshark.c \
-	../../../gba/cheats/parv3.c \
-	../../../gba/core.c \
-	../../../gba/gba.c \
-	../../../gba/hardware.c \
-	../../../gba/hle-bios.c \
-	../../../gba/io.c \
-	../../../gba/memory.c \
-	../../../gba/overrides.c \
-	../../../gba/renderers/software-bg.c \
-	../../../gba/renderers/software-mode0.c \
-	../../../gba/renderers/software-obj.c \
-	../../../gba/renderers/video-software.c \
-	../../../gba/renderers/tile-cache.c \
-	../../../gba/savedata.c \
-	../../../gba/serialize.c \
-	../../../gba/sio.c \
-	../../../gba/sio/lockstep.c \
-	../../../gba/video.c \
-	../../../gba/vfame.c \
-	../../../gb/audio.c \
-	../../../third-party/blip_buf/blip_buf.c \
-	../../../third-party/inih/ini.c \
-	../../../util/circle-buffer.c \
-	../../../util/configuration.c \
-	../../../util/crc32.c \
-	../../../util/patch-fast.c \
-	../../../util/patch-ips.c \
-	../../../util/patch-ups.c \
-	../../../util/patch.c \
-	../../../util/formatting.c \
-	../../../util/hash.c \
-	../../../util/string.c \
-	../../../util/table.c \
-	../../../util/vfs.c \
-	../../../util/vfs/vfs-mem.c \
-	../../windows/memory.c \
-	../bizinterface.c \
-	../localtime_r.c
+	$(ROOT_DIR)/core/config.c \
+	$(ROOT_DIR)/core/cheats.c \
+	$(ROOT_DIR)/core/core.c \
+	$(ROOT_DIR)/core/directories.c \
+	$(ROOT_DIR)/core/input.c \
+	$(ROOT_DIR)/core/interface.c \
+	$(ROOT_DIR)/core/library.c \
+	$(ROOT_DIR)/core/log.c \
+	$(ROOT_DIR)/core/rewind.c \
+	$(ROOT_DIR)/core/serialize.c \
+	$(ROOT_DIR)/core/timing.c \
+	$(ROOT_DIR)/core/lockstep.c \
+	$(ROOT_DIR)/core/sync.c \
+	$(ROOT_DIR)/core/thread.c \
+	$(ROOT_DIR)/core/tile-cache.c \
+	$(ROOT_DIR)/arm/debugger/debugger.c \
+	$(ROOT_DIR)/arm/debugger/memory-debugger.c \
+	$(ROOT_DIR)/arm/arm.c \
+	$(ROOT_DIR)/arm/decoder-arm.c \
+	$(ROOT_DIR)/arm/decoder-thumb.c \
+	$(ROOT_DIR)/arm/decoder.c \
+	$(ROOT_DIR)/arm/isa-arm.c \
+	$(ROOT_DIR)/arm/isa-thumb.c \
+	$(ROOT_DIR)/gba/audio.c \
+	$(ROOT_DIR)/gba/bios.c \
+	$(ROOT_DIR)/gba/cheats.c \
+	$(ROOT_DIR)/gba/cheats/codebreaker.c \
+	$(ROOT_DIR)/gba/cheats/gameshark.c \
+	$(ROOT_DIR)/gba/cheats/parv3.c \
+	$(ROOT_DIR)/gba/core.c \
+	$(ROOT_DIR)/gba/dma.c \
+	$(ROOT_DIR)/gba/gba.c \
+	$(ROOT_DIR)/gba/hardware.c \
+	$(ROOT_DIR)/gba/hle-bios.c \
+	$(ROOT_DIR)/gba/io.c \
+	$(ROOT_DIR)/gba/memory.c \
+	$(ROOT_DIR)/gba/overrides.c \
+	$(ROOT_DIR)/gba/renderers/software-bg.c \
+	$(ROOT_DIR)/gba/renderers/software-mode0.c \
+	$(ROOT_DIR)/gba/renderers/software-obj.c \
+	$(ROOT_DIR)/gba/renderers/video-software.c \
+	$(ROOT_DIR)/gba/renderers/tile-cache.c \
+	$(ROOT_DIR)/gba/savedata.c \
+	$(ROOT_DIR)/gba/serialize.c \
+	$(ROOT_DIR)/gba/sio.c \
+	$(ROOT_DIR)/gba/timer.c \
+	$(ROOT_DIR)/gba/sio/lockstep.c \
+	$(ROOT_DIR)/gba/video.c \
+	$(ROOT_DIR)/gba/vfame.c \
+	$(ROOT_DIR)/gb/audio.c \
+	$(ROOT_DIR)/third-party/blip_buf/blip_buf.c \
+	$(ROOT_DIR)/third-party/inih/ini.c \
+	$(ROOT_DIR)/util/circle-buffer.c \
+	$(ROOT_DIR)/util/configuration.c \
+	$(ROOT_DIR)/util/crc32.c \
+	$(ROOT_DIR)/util/patch-fast.c \
+	$(ROOT_DIR)/util/patch-ips.c \
+	$(ROOT_DIR)/util/patch-ups.c \
+	$(ROOT_DIR)/util/patch.c \
+	$(ROOT_DIR)/util/formatting.c \
+	$(ROOT_DIR)/util/hash.c \
+	$(ROOT_DIR)/util/string.c \
+	$(ROOT_DIR)/util/table.c \
+	$(ROOT_DIR)/util/vfs.c \
+	$(ROOT_DIR)/util/vfs/vfs-mem.c \
+	$(ROOT_DIR)/platform/windows/memory.c \
+	$(ROOT_DIR)/platform/bizhawk/bizinterface.c \
+	$(ROOT_DIR)/platform/bizhawk/localtime_r.c
 
-OBJS = $(SRCS:.c=.o)
+_OBJS:=$(SRCS:.c=.o)
+OBJS:=$(patsubst $(ROOT_DIR)%,$(OBJ_DIR)%,$(_OBJS))
 
 all: $(TARGET)
 
-%.o: %.c
+$(OBJ_DIR)/%.o: $(ROOT_DIR)/%.c
+	mkdir -p $(@D)
 	$(CXX) -c -o $@ $< $(CXXFLAGS)
 
 $(TARGET) : $(OBJS)
 	$(CXX) -o $@ $(LDFLAGS) $(OBJS)
 
 clean:
-	$(RM) $(OBJS)
-	$(RM) $(TARGET)
+	$(RM) -rf $(OBJ_DIR)
+	$(RM) -f $(TARGET)
 
 install:
 	$(CP) $(TARGET) $(DEST_$(ARCH))
+
+print-%:
+	@echo $* = $($*)
