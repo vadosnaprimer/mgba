@@ -360,25 +360,14 @@ EXP int BizPutState(bizctx* ctx, const void* data, int size)
 
 EXP void BizSetLayerMask(bizctx *ctx, int mask)
 {
-	struct GBAVideoRenderer *r = ctx->gba->video.renderer;
-	r->disableBG[0] = !(mask & 1);
-	r->disableBG[1] = !(mask & 2);
-	r->disableBG[2] = !(mask & 4);
-	r->disableBG[3] = !(mask & 8);
-	r->disableOBJ = !(mask & 16);
+	for (int i = 0; i < 5; i++)
+		ctx->core->enableVideoLayer(ctx->core, i, mask & 1 << i);
 }
 
 EXP void BizSetSoundMask(bizctx* ctx, int mask)
 {
-	struct GBAAudio *a = &ctx->gba->audio;
-	struct GBAudio *g = &a->psg;
-
-	g->forceDisableCh[0] = !(mask & 1);
-	g->forceDisableCh[1] = !(mask & 2);
-	g->forceDisableCh[2] = !(mask & 4);
-	g->forceDisableCh[3] = !(mask & 8);
-	a->forceDisableChA = !(mask & 16);
-	a->forceDisableChB = !(mask & 32);
+	for (int i = 0; i < 6; i++)
+		ctx->core->enableAudioChannel(ctx->core, i, mask & 1 << i);
 }
 
 EXP void BizGetRegisters(bizctx* ctx, int* dest)
