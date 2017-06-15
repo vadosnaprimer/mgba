@@ -8,6 +8,7 @@
 #include "mgba/internal/gba/gba.h"
 #include "mgba/internal/gba/video.h"
 #include "mgba/internal/gba/audio.h"
+#include "mgba/internal/gba/memory.h"
 #include "mgba/internal/debugger/debugger.h"
 #include "mgba/internal/gba/overrides.h"
 #include "mgba-util/vfs.h"
@@ -373,4 +374,14 @@ EXP void BizSetSoundMask(bizctx* ctx, int mask)
 EXP void BizGetRegisters(bizctx* ctx, int* dest)
 {
 	memcpy(dest, ctx->gba->cpu, 18 * sizeof(int));
+}
+
+EXP void BizWriteBus(bizctx* ctx, uint32_t addr, uint8_t val)
+{
+	GBAStore8(ctx->gba->cpu, addr, val, NULL);
+}
+
+EXP uint8_t BizReadBus(bizctx* ctx, uint32_t addr)
+{
+	return GBAView8(ctx->gba->cpu, addr);
 }
