@@ -110,15 +110,15 @@ OBJS:=$(patsubst $(ROOT_DIR)%,$(OBJ_DIR)%,$(_OBJS))
 all: $(TARGET)
 
 $(OBJ_DIR)/%.o: $(ROOT_DIR)/%.c
-	mkdir -p $(@D)
-	$(CXX) -c -o $@ $< $(CXXFLAGS)
+	@mkdir -p $(@D)
+	@$(CXX) -c -o $@ $< $(CXXFLAGS)
 
 $(TARGET) : $(OBJS)
-	$(CXX) -o $@ $(LDFLAGS) $(OBJS)
+	@$(CXX) -o $@ $(LDFLAGS) $(OBJS)
 
 clean:
-	$(RM) -rf $(OBJ_DIR)
-	$(RM) -f $(TARGET)
+	@$(RM) -rf $(OBJ_DIR)
+	@$(RM) -f $(TARGET)
 
 install:
 	$(CP) $(TARGET) $(DEST_$(ARCH))

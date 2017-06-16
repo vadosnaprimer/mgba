@@ -267,6 +267,7 @@ static void blit(void* dst_, const void* src_)
 EXP int BizAdvance(bizctx* ctx, uint16_t keys, color_t* vbuff, int* nsamp, int16_t* sbuff,
 	int64_t time, int16_t gyrox, int16_t gyroy, int16_t gyroz, uint8_t luma)
 {
+	ctx->core->setKeys(ctx->core, keys);
 	ctx->keys = keys;
 	ctx->light = luma;
 	ctx->time = time;
