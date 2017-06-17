@@ -21,7 +21,7 @@ Features:
  - Debugger: Segment/bank support
  - GB: Symbol table support
  - GB MBC: Add MBC1 multicart support
- - GBA: Implement keypad interrupts
+ - Implement keypad interrupts
  - LR35902: Watchpoints
  - Memory search
  - Debugger: Execution tracing
@@ -66,6 +66,10 @@ Bugfixes:
  - LR35902: Fix decoding LD r, $imm and 0-valued immediates (fixes mgba.io/i/735)
  - GB: Fix STAT blocking
  - GB MBC: Fix swapping carts not detect new MBC
+ - GB Timer: Fix DIV batching if TAC changes
+ - GB Video: Reset renderer when loading state
+ - GBA BIOS: Fix INT_MIN/-1 crash
+ - GBA Savedata: Update and fix Sharkport importing (fixes mgba.io/i/658)
 Misc:
  - SDL: Remove scancode key input
  - GBA Video: Clean up unused timers
@@ -128,6 +132,10 @@ Misc:
  - GB Video: Improved video timings
  - Core: List memory segments in the core
  - Core: Move savestate creation time to extdata
+ - Debugger: Add mDebuggerRunFrame convenience function
+ - GBA Memory: Remove unused prefetch cruft
+ - GB: Trust ROM header for number of SRAM banks (fixes mgba.io/i/726)
+ - Core: Config values can now be hexadecimal
 
 0.5.2: (2016-12-31)
 Bugfixes:
