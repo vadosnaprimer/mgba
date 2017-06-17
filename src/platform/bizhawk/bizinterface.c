@@ -9,7 +9,7 @@
 #include "mgba/internal/gba/video.h"
 #include "mgba/internal/gba/audio.h"
 #include "mgba/internal/gba/memory.h"
-#include "mgba/internal/debugger/debugger.h"
+#include "mgba/debugger/debugger.h"
 #include "mgba/internal/gba/overrides.h"
 #include "mgba-util/vfs.h"
 #include "mgba/core/serialize.h"
