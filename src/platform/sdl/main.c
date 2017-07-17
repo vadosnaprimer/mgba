@@ -14,6 +14,7 @@
 #include "feature/editline/cli-el-backend.h"
 #endif
 
+#include <mgba/core/cheats.h>
 #include <mgba/core/core.h>
 #include <mgba/core/config.h>
 #include <mgba/core/input.h>
@@ -56,7 +57,7 @@ int main(int argc, char** argv) {
 
 	initParserForGraphics(&subparser, &graphicsOpts);
 	bool parsed = parseArguments(&args, argc, argv, &subparser);
-	if (!args.fname) {
+	if (!args.fname && !args.showVersion) {
 		parsed = false;
 	}
 	if (!parsed || args.showHelp) {
@@ -95,6 +96,16 @@ int main(int argc, char** argv) {
 	if (!renderer.core->init(renderer.core)) {
 		freeArguments(&args);
 		return 1;
+	}
+
+	struct mCheatDevice* device = NULL;
+	if (args.cheatsFile && (device = renderer.core->cheatDevice(renderer.core))) {
+		struct VFile* vf = VFileOpen(args.cheatsFile, O_RDONLY);
+		if (vf) {
+			mCheatDeviceClear(device);
+			mCheatParseFile(device, vf);
+			vf->close(vf);
+		}
 	}
 
 	mInputMapInit(&renderer.core->inputMap, &GBAInputInfo);
@@ -140,6 +151,10 @@ int main(int argc, char** argv) {
 	ret = mSDLRun(&renderer, &args);
 	mSDLDetachPlayer(&renderer.events, &renderer.player);
 	mInputMapDeinit(&renderer.core->inputMap);
+
+	if (device) {
+		mCheatDeviceDestroy(device);
+	}
 
 	mSDLDeinit(&renderer);
 
