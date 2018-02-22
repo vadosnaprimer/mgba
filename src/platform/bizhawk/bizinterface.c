@@ -57,6 +57,7 @@ typedef struct
 	uint16_t keys;
 	int lagged;
 	int skipbios;
+	uint32_t palette[65536];
 } bizctx;
 
 static int32_t GetX(struct mRotationSource* rotationSource)
@@ -227,44 +228,17 @@ EXP void BizReset(bizctx* ctx)
 	resetinternal(ctx);
 }
 
-static void blit(void* dst_, const void* src_)
+static void blit(uint32_t* dst, const color_t* src, const uint32_t* palette)
 {
-	// swap R&B, set top (alpha) byte
-	const uint8_t* src = (const uint8_t*)src_;
-	uint8_t* dst = (uint8_t*)dst_;
-
-	uint8_t* dst_end = dst + VIDEO_HORIZONTAL_PIXELS * VIDEO_VERTICAL_PIXELS * BYTES_PER_PIXEL;
+	uint32_t* dst_end = dst + VIDEO_HORIZONTAL_PIXELS * VIDEO_VERTICAL_PIXELS;
 
 	while (dst < dst_end)
 	{
-		dst[2] = src[0] | src[0] >> 5;
-		dst[1] = src[1] | src[1] >> 5;
-		dst[0] = src[2] | src[2] >> 5;
-		dst[3] = 0xff;
-		dst += 4;
-		src += 4;
-		dst[2] = src[0] | src[0] >> 5;
-		dst[1] = src[1] | src[1] >> 5;
-		dst[0] = src[2] | src[2] >> 5;
-		dst[3] = 0xff;
-		dst += 4;
-		src += 4;
-		dst[2] = src[0] | src[0] >> 5;
-		dst[1] = src[1] | src[1] >> 5;
-		dst[0] = src[2] | src[2] >> 5;
-		dst[3] = 0xff;
-		dst += 4;
-		src += 4;
-		dst[2] = src[0] | src[0] >> 5;
-		dst[1] = src[1] | src[1] >> 5;
-		dst[0] = src[2] | src[2] >> 5;
-		dst[3] = 0xff;
-		dst += 4;
-		src += 4;
+		*dst++ = palette[*src++];
 	}
 }
 
-EXP int BizAdvance(bizctx* ctx, uint16_t keys, color_t* vbuff, int* nsamp, int16_t* sbuff,
+EXP int BizAdvance(bizctx* ctx, uint16_t keys, uint32_t* vbuff, int* nsamp, int16_t* sbuff,
 	int64_t time, int16_t gyrox, int16_t gyroy, int16_t gyroz, uint8_t luma)
 {
 	ctx->core->setKeys(ctx->core, keys);
@@ -277,13 +251,18 @@ EXP int BizAdvance(bizctx* ctx, uint16_t keys, color_t* vbuff, int* nsamp, int16
 	ctx->lagged = TRUE;
 	ctx->core->runFrame(ctx->core);
 
-	blit(vbuff, ctx->vbuff);
+	blit(vbuff, ctx->vbuff, ctx->palette);
 	*nsamp = blip_samples_avail(ctx->core->getAudioChannel(ctx->core, 0));
 	if (*nsamp > 1024)
 		*nsamp = 1024;
 	blip_read_samples(ctx->core->getAudioChannel(ctx->core, 0), sbuff, 1024, TRUE);
 	blip_read_samples(ctx->core->getAudioChannel(ctx->core, 1), sbuff + 1, 1024, TRUE);
 	return ctx->lagged;
+}
+
+EXP void BizSetPalette(bizctx* ctx, const uint32_t* palette)
+{
+	memcpy(ctx->palette, palette, sizeof(ctx->palette));
 }
 
 struct MemoryAreas
