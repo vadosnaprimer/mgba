@@ -173,6 +173,7 @@ EXP bizctx* BizCreate(const void* bios, const void* data, int length, const over
 	blip_set_rates(ctx->core->getAudioChannel(ctx->core, 1), ctx->core->frequency(ctx->core), 44100);
 
 	ctx->core->loadROM(ctx->core, ctx->romvf);
+	memset(ctx->sram, 0xff, 131072);
 	ctx->sramvf = VFileFromMemory(ctx->sram, 131072);
 	ctx->core->loadSave(ctx->core, ctx->sramvf);
 
