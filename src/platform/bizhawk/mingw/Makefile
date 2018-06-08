@@ -4,7 +4,7 @@ CP = cp
 
 MACHINE = $(shell $(CXX) -dumpmachine)
 ifneq (,$(findstring i686,$(MACHINE)))
-	$(error 32 bit build no longer supported)
+	ARCH = 32
 else ifneq (,$(findstring x86_64,$(MACHINE)))
 	ARCH = 64
 else
@@ -23,7 +23,7 @@ CXXFLAGS = \
 	-I../../../../include -Wall -std=gnu99 -fgnu89-inline \
 	-I../../.. \
 	-DRESAMPLE_LIBRARY=RESAMPLE_BLIP_BUF -DHAVE_LOCALTIME_R \
-	-DMINIMAL_CORE=2 -DDISABLE_THREADING -DM_CORE_GBA -DCOLOR_16_BIT
+	-DMINIMAL_CORE=2 -DDISABLE_THREADING -DM_CORE_GBA
 
 TARGET = mgba.dll
 
@@ -32,7 +32,7 @@ LDFLAGS_64 =
 LDFLAGS = -shared $(LDFLAGS_$(ARCH)) $(CXXFLAGS)
 
 DEST_32 = ../../../../../output/dll
-DEST_64 = ../../../../../output/dll
+DEST_64 = ../../../../../output64/dll
 
 SRCS = \
 	$(ROOT_DIR)/core/config.c \
