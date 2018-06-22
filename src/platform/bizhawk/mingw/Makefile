@@ -32,7 +32,7 @@ LDFLAGS_64 =
 LDFLAGS = -shared $(LDFLAGS_$(ARCH)) $(CXXFLAGS)
 
 DEST_32 = ../../../../../output/dll
-DEST_64 = ../../../../../output64/dll
+DEST_64 = ../../../../../output/dll
 
 SRCS = \
 	$(ROOT_DIR)/core/config.c \
